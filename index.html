@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebM to MP4</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23667eea'/%3E%3Cpath d='M8 10h16v2H8zm0 4h16v2H8zm0 4h12v2H8z' fill='white'/%3E%3Ccircle cx='22' cy='20' r='3' fill='%23f44336'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WebM to MP4</h1>
+            <div class="subtitle">高性能转换 · Web Worker · 智能参数 · GitHub Pages 兼容</div>
+        </div>
+
+        <div class="optimization-info">
+            <h3>🚀 性能优化特性</h3>
+            <ul>
+                <li><strong>快速复制模式:</strong> 优先使用流复制，避免重编码，提速5-10倍</li>
+                <li><strong>Web Worker:</strong> 后台转换，不阻塞界面</li>
+                <li><strong>智能参数:</strong> 根据文件大小自动选择最优设置</li>
+                <li><strong>多线程处理:</strong> 充分利用CPU多核性能</li>
+                <li><strong>GitHub Pages兼容:</strong> 不使用SharedArrayBuffer</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <div class="main-controls">
+                <span class="camera-status" id="cameraStatus"></span>
+                <span id="cameraStatusText">摄像头状态</span>
+                <br><br>
+                <button class="btn" id="recordBtn">开始录制</button>
+                <button class="btn" id="convertBtn" disabled>转换为 MP4</button>
+                <button class="btn btn-success" id="downloadBtn" disabled style="display: none;">下载 MP4</button>
+                <button class="btn btn-danger" id="closeCameraBtn" disabled style="display: none;">关闭摄像头</button>
+            </div>
+        </div>
+
+        <div class="section" style="position: relative;">
+            <video id="video" autoplay muted></video>
+            <div id="videoFormatIndicator" class="video-format-indicator" style="display: none;">WebM</div>
+        </div>
+
+        <div class="section">
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stat-item">
+                    <div class="stat-label">原始大小</div>
+                    <div class="stat-value" id="webmSize">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">转换后大小</div>
+                    <div class="stat-value" id="mp4Size">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">转换耗时</div>
+                    <div class="stat-value" id="convertTime">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">压缩效果</div>
+                    <div class="stat-value" id="compressionRatio">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="speakerModeSection">
+            <h3>演讲者模式</h3>
+            <div class="speaker-mode-controls">
+                <div class="control-group">
+                    <label for="videoPosition">视频位置:</label>
+                    <select id="videoPosition">
+                        <option value="top-left">左上角</option>
+                        <option value="top-right">右上角</option>
+                        <option value="bottom-left">左下角</option>
+                        <option value="bottom-right" selected>右下角</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="videoScale">视频大小:</label>
+                    <select id="videoScale">
+                        <option value="0.12">12%</option>
+                        <option value="0.15">15%</option>
+                        <option value="0.20" selected>20%</option>
+                        <option value="0.25">25%</option>
+                        <option value="0.33">33%</option>
+                        <option value="0.40">40%</option>
+                        <option value="0.50">50%</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="videoMargin">边界缝隙:</label>
+                    <select id="videoMargin">
+                        <option value="0" selected>0% (紧贴边缘)</option>
+                        <option value="0.02">2%</option>
+                        <option value="0.05">5%</option>
+                        <option value="0.10">10%</option>
+                    </select>
+                </div>
+            </div>
+            <div class="speaker-buttons">
+                <button class="btn btn-primary" id="generateSpeakerVideo" disabled>合成</button>
+            </div>
+            <div class="speaker-preview" id="speakerPreview" style="display: none;">
+                <canvas id="speakerCanvas" width="1920" height="1080"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">转换日志</h3>
+                <button class="btn" id="copyLogBtn" style="padding: 8px 16px; font-size: 14px;">复制日志</button>
+            </div>
+            <div id="log" class="log">等待初始化...</div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
