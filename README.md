@@ -43,20 +43,36 @@ const mp4Buffer = await converter.convertWebMToMP4(webmBlob);
 const mp4Blob = new Blob([mp4Buffer], { type: 'video/mp4' });
 ```
 
-## 🚀 Installation & Development
+## 🚀 Installation & Deployment
 
-This project uses **Vite** for local development and optimized builds.
+This project uses **Vite** for local development and optimized builds, with a fully automated CI/CD pipeline for GitHub Pages.
+
+### Local Development Loop
 
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Start local development server
+# 2. Start local development server (with HMR)
 npm run dev
 
-# 3. Build for production
+# 3. Build static assets for production (outputs to /dist)
 npm run build
+
+# 4. Preview the production build locally
+npm run preview
 ```
+
+### Continuous Deployment (CI/CD)
+
+This repository is configured with a **GitHub Actions** workflow (`.github/workflows/deploy.yml`) that achieves a fully automated deployment closed-loop:
+
+1. **Commit & Push**: Whenever you push code to the `main` branch, the GitHub Action is automatically triggered.
+2. **Cloud Build**: The CI server checks out the code, installs dependencies, and runs `npm run build` in a clean Ubuntu environment.
+3. **Artifact Publishing**: The resulting `/dist` folder is automatically published to **GitHub Pages**.
+
+**To enable this in your fork:**
+Go to your repository settings -> `Pages` -> Set `Source` to **GitHub Actions**. No manual deployment steps or server maintenance are required.
 
 ## 📄 License
 MIT License.
