@@ -13,8 +13,8 @@ export class PathResolver {
         let baseURL;
         
         if (context === 'worker') {
-            // 在Worker中，Worker文件在modules目录下，需要回到项目根目录
-            baseURL = new URL('../', self.location.href).href;
+            // 在Worker中，Worker文件在 src/modules 目录下，需要回退两级到项目根目录
+            baseURL = new URL('../../', self.location.href).href;
         } else {
             // 在主线程中，使用当前目录（项目根目录）
             baseURL = new URL('./', window.location.href).href;
@@ -103,14 +103,14 @@ export class PathResolver {
             });
             
             if (response.ok) {
-                if (logCallback) logCallback(`✅ 资源可访问: ${url}`);
+                if (logCallback) logCallback(`资源可访问: ${url}`);
                 return true;
             } else {
-                if (logCallback) logCallback(`❌ 资源不可访问 (${response.status}): ${url}`);
+                if (logCallback) logCallback(`资源不可访问 (${response.status}): ${url}`);
                 return false;
             }
         } catch (error) {
-            if (logCallback) logCallback(`❌ 资源检查失败: ${url} - ${error.message}`);
+            if (logCallback) logCallback(`资源检查失败: ${url} - ${error.message}`);
             return false;
         }
     }
@@ -125,7 +125,7 @@ export class PathResolver {
         const config = this.getLoadConfig(context);
         
         if (logCallback) {
-            logCallback('🔍 验证FFmpeg核心文件...');
+            logCallback('验证FFmpeg核心文件...');
         }
         
         const coreAccessible = await this.validateResourceURL(config.coreURL, logCallback);
@@ -133,12 +133,12 @@ export class PathResolver {
         
         if (coreAccessible && wasmAccessible) {
             if (logCallback) {
-                logCallback('✅ 所有核心文件都可以访问');
+                logCallback('所有核心文件都可以访问');
             }
             return { config, valid: true };
         } else {
             if (logCallback) {
-                logCallback('❌ 部分核心文件无法访问');
+                logCallback('部分核心文件无法访问');
             }
             return { config, valid: false };
         }
@@ -158,13 +158,13 @@ export class PathResolver {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 if (logCallback) {
-                    logCallback(`🔄 尝试加载FFmpeg模块 (第${attempt}次): ${moduleURL}`);
+                    logCallback(`尝试加载FFmpeg模块 (第${attempt}次): ${moduleURL}`);
                 }
                 
                 // 验证资源是否可访问
                 const isAccessible = await this.validateResourceURL(moduleURL, logCallback);
                 if (!isAccessible && attempt < maxRetries) {
-                    if (logCallback) logCallback(`⚠️ 资源不可访问，将重试...`);
+                    if (logCallback) logCallback(`资源不可访问，将重试...`);
                     await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                     continue;
                 }
@@ -176,7 +176,7 @@ export class PathResolver {
                 const module = await import(moduleURL);
                 
                 if (logCallback) {
-                    logCallback(`✅ FFmpeg模块加载成功 (第${attempt}次尝试)`);
+                    logCallback(`FFmpeg模块加载成功 (第${attempt}次尝试)`);
                 }
                 
                 return module;
@@ -185,7 +185,7 @@ export class PathResolver {
                 lastError = error;
                 
                 if (logCallback) {
-                    logCallback(`❌ 第${attempt}次加载失败: ${error.message}`);
+                    logCallback(`第${attempt}次加载失败: ${error.message}`);
                 }
                 
                 if (attempt < maxRetries) {

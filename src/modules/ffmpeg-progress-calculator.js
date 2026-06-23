@@ -19,7 +19,7 @@ class FFmpegProgressCalculator {
      */
     setTotalDuration(duration) {
         this.totalDuration = duration;
-        this.log(`📐 设置视频总时长: ${duration.toFixed(2)}秒`);
+        this.log(`设置视频总时长: ${duration.toFixed(2)}秒`);
     }
 
     /**
@@ -29,7 +29,7 @@ class FFmpegProgressCalculator {
         this.lastValidPercent = 0;
         this.lastValidTime = 0;
         this.startTime = Date.now();
-        this.log(`🔄 进度计算器已重置`);
+        this.log(`进度计算器已重置`);
     }
 
     /**
@@ -58,14 +58,14 @@ class FFmpegProgressCalculator {
         const parsedTime = this.parseTimeInfo(timeInfo);
         if (parsedTime === null) {
             result.reason = '时间解析失败';
-            this.log(`❌ ${result.reason}: ${timeInfo}`);
+            this.log(`${result.reason}: ${timeInfo}`);
             return result;
         }
 
         // 验证时间合理性
         if (!this.isTimeValid(parsedTime)) {
             result.reason = `时间超出合理范围: ${parsedTime.toFixed(2)}s`;
-            this.log(`⚠️ ${result.reason} (总时长: ${this.totalDuration.toFixed(2)}s)`);
+            this.log(`${result.reason} (总时长: ${this.totalDuration.toFixed(2)}s)`);
             return result;
         }
 
@@ -81,7 +81,7 @@ class FFmpegProgressCalculator {
         // 确保单调递增
         if (bestPercent < this.lastValidPercent) {
             result.reason = `进度倒退: ${bestPercent}% < ${this.lastValidPercent}%`;
-            this.log(`🔄 ${result.reason}`);
+            this.log(`${result.reason}`);
             return result;
         }
 
@@ -94,7 +94,7 @@ class FFmpegProgressCalculator {
         result.isValid = true;
         result.reason = '进度更新成功';
 
-        this.log(`✅ ${result.reason}: ${bestPercent}% (时间: ${parsedTime.toFixed(2)}s)`);
+        this.log(`${result.reason}: ${bestPercent}% (时间: ${parsedTime.toFixed(2)}s)`);
         return result;
     }
 
@@ -129,7 +129,7 @@ class FFmpegProgressCalculator {
             // 处理可能的微秒单位错误
             if (time > 1000000) {
                 time = time / 1000000;
-                this.log(`🔄 微秒转换: ${simpleTimeMatch[1]} -> ${time.toFixed(2)}s`);
+                this.log(`微秒转换: ${simpleTimeMatch[1]} -> ${time.toFixed(2)}s`);
             }
             
             return time;

@@ -2,8 +2,30 @@ import { elements } from './dom.js';
 
 export const logger = {
     log: (message) => {
+        // 去除或替换不专业的表情符号和杂乱日志
+        let cleanMessage = message
+            .replace(/[🟢🚀🔴✅✨🚫🔒🔓📺📱📦💾⏳⚠️❌❓🎉📸🎶]/g, '')
+            .trim();
+        
+        if (!cleanMessage) return;
+        
+        // 使用更专业的格式
+        if (cleanMessage.includes('Worker转换完成')) {
+            cleanMessage = cleanMessage.replace('Worker转换完成！耗时', 'Worker conversion completed. Time:');
+        } else if (cleanMessage.includes('正在初始化')) {
+            cleanMessage = cleanMessage.replace('正在初始化', 'Initializing ');
+        } else if (cleanMessage.includes('尝试加载')) {
+            cleanMessage = cleanMessage.replace('尝试加载', 'Attempting to load ');
+        } else if (cleanMessage.includes('资源可访问')) {
+            cleanMessage = cleanMessage.replace('资源可访问', 'Resource accessible');
+        } else if (cleanMessage.includes('测试发生异常')) {
+            cleanMessage = cleanMessage.replace('测试发生异常', 'Test exception occurred');
+        } else if (cleanMessage.includes('开始转换')) {
+            cleanMessage = cleanMessage.replace('开始转换', 'Starting conversion ');
+        }
+        
         const timestamp = new Date().toLocaleTimeString();
-        elements.log.textContent += `[${timestamp}] ${message}\n`;
+        elements.log.textContent += `[${timestamp}] ${cleanMessage}\n`;
         elements.log.scrollTop = elements.log.scrollHeight;
     },
 
@@ -24,7 +46,7 @@ export const logger = {
                 }, 2000);
             }).catch(err => {
                 console.error('复制失败:', err);
-                logger.log('❌ 日志复制失败，请手动选择复制');
+                logger.log('日志复制失败，请手动选择复制');
             });
         } else {
             // 备用方案：选择文本
@@ -34,10 +56,10 @@ export const logger = {
                 const selection = window.getSelection();
                 selection.removeAllRanges();
                 selection.addRange(range);
-                logger.log('📋 日志文本已选中，请按Ctrl+C复制');
+                logger.log('日志文本已选中，请按Ctrl+C复制');
             } catch (err) {
                 console.error('选择文本失败:', err);
-                logger.log('❌ 无法选择日志文本');
+                logger.log('无法选择日志文本');
             }
         }
     }

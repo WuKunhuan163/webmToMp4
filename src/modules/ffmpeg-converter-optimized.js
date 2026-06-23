@@ -47,7 +47,7 @@ class OptimizedFFmpegConverter {
                         case 'initialized':
                             if (success) {
                                 this.isLoaded = true;
-                                if (this.onLog) this.onLog('✅ FFmpeg Worker 初始化完成！');
+                                if (this.onLog) this.onLog('FFmpeg Worker 初始化完成！');
                                 resolve();
                             } else {
                                 reject(new Error('Worker 初始化失败'));
@@ -117,10 +117,10 @@ class OptimizedFFmpegConverter {
             await this.ffmpeg.load(loadConfig);
 
             this.isLoaded = true;
-            if (this.onLog) this.onLog('✅ FFmpeg 直接模式初始化完成！');
+            if (this.onLog) this.onLog('FFmpeg 直接模式初始化完成！');
 
         } catch (error) {
-            if (this.onLog) this.onLog(`❌ FFmpeg 初始化失败: ${error.message}`);
+            if (this.onLog) this.onLog(`FFmpeg 初始化失败: ${error.message}`);
             throw error;
         }
     }
@@ -232,7 +232,7 @@ class OptimizedFFmpegConverter {
                         this.currentReject = null;
                         const convertTime = ((Date.now() - startTime) / 1000).toFixed(2);
                         const mp4Blob = new Blob([buffer], { type: 'video/mp4' });
-                        if (this.onLog) this.onLog(`✅ Worker转换完成！耗时 ${convertTime} 秒`);
+                        if (this.onLog) this.onLog(`Worker转换完成！耗时 ${convertTime} 秒`);
                         resolve(mp4Blob);
                         break;
                         
@@ -314,11 +314,11 @@ class OptimizedFFmpegConverter {
             await this.ffmpeg.deleteFile('input.webm');
             await this.ffmpeg.deleteFile('output.mp4');
 
-            if (this.onLog) this.onLog('✅ 直接模式转换完成！');
+            if (this.onLog) this.onLog('直接模式转换完成！');
             return mp4Blob;
 
         } catch (error) {
-            if (this.onLog) this.onLog(`❌ 转换失败: ${error.message}`);
+            if (this.onLog) this.onLog(`转换失败: ${error.message}`);
             
             if (options.fastMode !== false) {
                 if (this.onLog) this.onLog('快速模式失败，尝试标准重编码...');
@@ -367,7 +367,7 @@ class OptimizedFFmpegConverter {
         const { pptBackground, videoScale, overlayPosition, outputSize } = options;
 
         try {
-            if (this.onLog) this.onLog('🎬 开始视频背景合成...');
+            if (this.onLog) this.onLog('开始视频背景合成...');
 
             if (this.useWorker && this.worker) {
                 return await this.compositeWithWorker(videoBlob, options);
@@ -375,7 +375,7 @@ class OptimizedFFmpegConverter {
                 return await this.compositeDirect(videoBlob, options);
             }
         } catch (error) {
-            if (this.onLog) this.onLog(`❌ 背景合成失败: ${error.message}`);
+            if (this.onLog) this.onLog(`背景合成失败: ${error.message}`);
             throw error;
         }
     }
@@ -403,7 +403,7 @@ class OptimizedFFmpegConverter {
                     case 'composite_complete':
                         const convertTime = ((Date.now() - startTime) / 1000).toFixed(2);
                         const mp4Blob = new Blob([buffer], { type: 'video/mp4' });
-                        if (this.onLog) this.onLog(`✅ Worker合成完成！耗时 ${convertTime} 秒`);
+                        if (this.onLog) this.onLog(`Worker合成完成！耗时 ${convertTime} 秒`);
                         resolve(mp4Blob);
                         break;
                         
@@ -427,35 +427,35 @@ class OptimizedFFmpegConverter {
         const { pptBackground, videoScale, overlayPosition, outputSize, autoTrimStart = true } = options;
 
         try {
-            if (this.onLog) this.onLog('📹 直接模式背景合成...');
+            if (this.onLog) this.onLog('直接模式背景合成...');
 
             // 写入视频文件
             const videoData = new Uint8Array(await videoBlob.arrayBuffer());
             await this.ffmpeg.writeFile('input_video.webm', videoData);
-            if (this.onLog) this.onLog(`📹 输入视频大小: ${videoData.length} bytes`);
+            if (this.onLog) this.onLog(`输入视频大小: ${videoData.length} bytes`);
 
             // 检测视频开始时间（可选）
             let startTime = 0;
             if (autoTrimStart) {
-                if (this.onLog) this.onLog('🔍 [视频检测] 开始检测视频实际开始时间...');
+                if (this.onLog) this.onLog('[视频检测] 开始检测视频实际开始时间...');
                 startTime = await this.detectVideoStart('input_video.webm');
                 if (startTime > 0) {
-                    if (this.onLog) this.onLog(`✂️ [视频检测] 检测到视频实际开始时间: ${startTime.toFixed(2)}秒，将自动裁剪`);
-                    if (this.onLog) this.onLog(`📐 [视频检测] 裁剪设置: 从${startTime.toFixed(2)}秒开始，跳过前面的静态部分`);
+                    if (this.onLog) this.onLog(`[视频检测] 检测到视频实际开始时间: ${startTime.toFixed(2)}秒，将自动裁剪`);
+                    if (this.onLog) this.onLog(`[视频检测] 裁剪设置: 从${startTime.toFixed(2)}秒开始，跳过前面的静态部分`);
                 } else {
-                    if (this.onLog) this.onLog('📹 [视频检测] 视频从开头就有内容，无需裁剪');
+                    if (this.onLog) this.onLog('[视频检测] 视频从开头就有内容，无需裁剪');
                 }
             } else {
-                if (this.onLog) this.onLog('📹 [视频检测] 自动裁剪功能已禁用');
+                if (this.onLog) this.onLog('[视频检测] 自动裁剪功能已禁用');
             }
 
             // 读取PPT背景图片
             const response = await fetch(pptBackground);
             const pptData = new Uint8Array(await response.arrayBuffer());
             await this.ffmpeg.writeFile('background.jpg', pptData);
-            if (this.onLog) this.onLog(`📋 PPT背景图片大小: ${pptData.length} bytes`);
+            if (this.onLog) this.onLog(`PPT背景图片大小: ${pptData.length} bytes`);
 
-            if (this.onLog) this.onLog(`🎯 合成参数: 视频缩放=${videoScale}, 叠加位置=${overlayPosition}, 输出尺寸=${outputSize}`);
+            if (this.onLog) this.onLog(`合成参数: 视频缩放=${videoScale}, 叠加位置=${overlayPosition}, 输出尺寸=${outputSize}`);
 
             // 确保输出尺寸是偶数（H.264要求）
             const [outputWidth, outputHeight] = outputSize.split(':').map(Number);
@@ -463,7 +463,7 @@ class OptimizedFFmpegConverter {
             const evenHeight = outputHeight % 2 === 0 ? outputHeight : outputHeight + 1;
             const evenOutputSize = `${evenWidth}:${evenHeight}`;
             
-            if (this.onLog) this.onLog(`📐 调整输出尺寸: ${outputSize} -> ${evenOutputSize} (确保偶数)`);
+            if (this.onLog) this.onLog(`调整输出尺寸: ${outputSize} -> ${evenOutputSize} (确保偶数)`);
 
             // 构建FFmpeg命令 - 修复静态背景与动态视频叠加问题
             const command = [
@@ -492,29 +492,29 @@ class OptimizedFFmpegConverter {
                 'output_composite.mp4'
             );
 
-            if (this.onLog) this.onLog(`🔧 FFmpeg合成命令: ${command.join(' ')}`);
+            if (this.onLog) this.onLog(`FFmpeg合成命令: ${command.join(' ')}`);
             
             // 执行前检查输入文件
             try {
                 const bgCheck = await this.ffmpeg.readFile('background.jpg');
                 const videoCheck = await this.ffmpeg.readFile('input_video.webm');
-                if (this.onLog) this.onLog(`✅ 执行前检查 - 背景图片: ${bgCheck.length} bytes, 视频: ${videoCheck.length} bytes`);
+                if (this.onLog) this.onLog(`执行前检查 - 背景图片: ${bgCheck.length} bytes, 视频: ${videoCheck.length} bytes`);
             } catch (error) {
-                if (this.onLog) this.onLog(`❌ 执行前文件检查失败: ${error.message}`);
+                if (this.onLog) this.onLog(`执行前文件检查失败: ${error.message}`);
             }
             
-            if (this.onLog) this.onLog('🔧 执行FFmpeg合成命令...');
+            if (this.onLog) this.onLog('执行FFmpeg合成命令...');
             await this.ffmpeg.exec(command);
             
             // 执行后检查
-            if (this.onLog) this.onLog('✅ FFmpeg命令执行完成，检查输出文件...');
+            if (this.onLog) this.onLog('FFmpeg命令执行完成，检查输出文件...');
 
             // 读取输出文件
             const outputData = await this.ffmpeg.readFile('output_composite.mp4');
-            if (this.onLog) this.onLog(`📤 输出文件大小: ${outputData.length} bytes`);
+            if (this.onLog) this.onLog(`输出文件大小: ${outputData.length} bytes`);
             
             if (outputData.length < 1000) {
-                if (this.onLog) this.onLog(`❌ 输出文件太小 (${outputData.length} bytes)，可能合成失败`);
+                if (this.onLog) this.onLog(`输出文件太小 (${outputData.length} bytes)，可能合成失败`);
                 throw new Error(`合成失败：输出文件太小 (${outputData.length} bytes)`);
             }
             
@@ -525,11 +525,11 @@ class OptimizedFFmpegConverter {
             await this.ffmpeg.deleteFile('background.jpg');
             await this.ffmpeg.deleteFile('output_composite.mp4');
 
-            if (this.onLog) this.onLog('✅ 背景合成完成！');
+            if (this.onLog) this.onLog('背景合成完成！');
             return compositeBlob;
 
         } catch (error) {
-            if (this.onLog) this.onLog(`❌ 背景合成失败: ${error.message}`);
+            if (this.onLog) this.onLog(`背景合成失败: ${error.message}`);
             throw error;
         }
     }
@@ -537,7 +537,7 @@ class OptimizedFFmpegConverter {
     // 检测视频实际开始时间（跳过静态开头部分）
     async detectVideoStart(inputFile) {
         try {
-            if (this.onLog) this.onLog('🔍 [场景检测] 开始分析视频场景变化...');
+            if (this.onLog) this.onLog('[场景检测] 开始分析视频场景变化...');
             
             // 使用场景检测找到第一个显著变化的时间点
             const command = [
@@ -548,7 +548,7 @@ class OptimizedFFmpegConverter {
                 '-'
             ];
 
-            if (this.onLog) this.onLog(`🔍 [场景检测] FFmpeg命令: ${command.join(' ')}`);
+            if (this.onLog) this.onLog(`[场景检测] FFmpeg命令: ${command.join(' ')}`);
 
             // 捕获FFmpeg输出
             let logOutput = '';
@@ -560,15 +560,15 @@ class OptimizedFFmpegConverter {
                     logOutput += message + '\n';
                     // 实时显示FFmpeg分析日志
                     if (this.onLog && message.includes('pts_time')) {
-                        this.onLog(`🔍 [场景检测] FFmpeg输出: ${message.trim()}`);
+                        this.onLog(`[场景检测] FFmpeg输出: ${message.trim()}`);
                     }
                 });
             }
 
-            if (this.onLog) this.onLog('🔍 [场景检测] 执行场景检测命令...');
+            if (this.onLog) this.onLog('[场景检测] 执行场景检测命令...');
             await this.ffmpeg.exec(command);
             
-            if (this.onLog) this.onLog(`🔍 [场景检测] 命令执行完成，分析输出日志 (${logOutput.length}字符)`);
+            if (this.onLog) this.onLog(`[场景检测] 命令执行完成，分析输出日志 (${logOutput.length}字符)`);
 
             // 解析输出中的时间戳
             const lines = logOutput.split('\n');
@@ -581,41 +581,41 @@ class OptimizedFFmpegConverter {
                     if (timeMatch) {
                         const sceneTime = parseFloat(timeMatch[1]);
                         foundScenes.push(sceneTime);
-                        if (this.onLog) this.onLog(`🎯 [场景检测] 发现场景变化 #${foundScenes.length}: ${sceneTime.toFixed(2)}秒`);
+                        if (this.onLog) this.onLog(`[场景检测] 发现场景变化 #${foundScenes.length}: ${sceneTime.toFixed(2)}秒`);
                     }
                 }
             }
             
-            if (this.onLog) this.onLog(`🔍 [场景检测] 总共发现 ${foundScenes.length} 个场景变化`);
+            if (this.onLog) this.onLog(`[场景检测] 总共发现 ${foundScenes.length} 个场景变化`);
             
             if (foundScenes.length > 0) {
                 const firstSceneTime = foundScenes[0];
-                if (this.onLog) this.onLog(`🎯 [场景检测] 第一个场景变化: ${firstSceneTime.toFixed(2)}秒`);
+                if (this.onLog) this.onLog(`[场景检测] 第一个场景变化: ${firstSceneTime.toFixed(2)}秒`);
                 
                 // 如果变化在合理范围内（0.3-10秒），认为是有效的开始时间
                 if (firstSceneTime >= 0.3 && firstSceneTime <= 10.0) {
                     const startTime = Math.max(0, firstSceneTime - 0.1); // 提前0.1秒开始
-                    if (this.onLog) this.onLog(`✂️ [场景检测] 设置开始时间: ${startTime.toFixed(2)}秒 (原场景时间-0.1秒)`);
+                    if (this.onLog) this.onLog(`[场景检测] 设置开始时间: ${startTime.toFixed(2)}秒 (原场景时间-0.1秒)`);
                     return startTime;
                 } else {
-                    if (this.onLog) this.onLog(`⚠️ [场景检测] 第一个场景变化时间不合理: ${firstSceneTime.toFixed(2)}秒 (应在0.3-10秒范围内)`);
+                    if (this.onLog) this.onLog(`[场景检测] 第一个场景变化时间不合理: ${firstSceneTime.toFixed(2)}秒 (应在0.3-10秒范围内)`);
                 }
             } else {
-                if (this.onLog) this.onLog('📹 [场景检测] 未检测到任何场景变化');
+                if (this.onLog) this.onLog('[场景检测] 未检测到任何场景变化');
             }
 
-            if (this.onLog) this.onLog('📹 [场景检测] 结论：从原始位置开始，无需裁剪');
+            if (this.onLog) this.onLog('[场景检测] 结论：从原始位置开始，无需裁剪');
             return 0;
 
         } catch (error) {
-            if (this.onLog) this.onLog(`⚠️ [场景检测] 检测失败: ${error.message}，从原始位置开始`);
+            if (this.onLog) this.onLog(`[场景检测] 检测失败: ${error.message}，从原始位置开始`);
             return 0;
         }
     }
 
     // 取消当前转换
     cancelConversion() {
-        if (this.onLog) this.onLog('🛑 用户请求取消转换...');
+        if (this.onLog) this.onLog('用户请求取消转换...');
         
         this.isCancelled = true;
         
@@ -642,11 +642,11 @@ class OptimizedFFmpegConverter {
         
         // 如果使用直接模式，FFmpeg没有直接的取消方法，但我们设置取消标志
         if (!this.useWorker && this.ffmpeg) {
-            if (this.onLog) this.onLog('🛑 设置取消标志（直接模式）...');
+            if (this.onLog) this.onLog('设置取消标志（直接模式）...');
             // 注意：FFmpeg.wasm 没有直接的取消方法，但我们可以通过Promise rejection来处理
         }
         
-        if (this.onLog) this.onLog('✅ 取消请求已发送');
+        if (this.onLog) this.onLog('取消请求已发送');
     }
 
     // 清理资源

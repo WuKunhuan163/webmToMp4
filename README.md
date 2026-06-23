@@ -43,6 +43,18 @@ const mp4Buffer = await converter.convertWebMToMP4(webmBlob);
 const mp4Blob = new Blob([mp4Buffer], { type: 'video/mp4' });
 ```
 
+## 🤖 Automated UI Demo (Playwright)
+
+For testing and presentation purposes, this project includes a semi-automated Playwright script that mimics user UI interaction (camera access, recording, converting, and synthesizing):
+
+```bash
+# 1. Start the dev server in the background
+npm run dev -- --port 5173 &
+
+# 2. Run the automated UI demonstration script
+node scripts/ui_demo.cjs
+```
+
 ## 🚀 Installation & Deployment
 
 This project uses **Vite** for local development and optimized builds, with a fully automated CI/CD pipeline for GitHub Pages.

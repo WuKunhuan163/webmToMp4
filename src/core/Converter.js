@@ -2,6 +2,7 @@ import { state } from './State.js';
 import { elements } from '../utils/dom.js';
 import { logger } from '../utils/logger.js';
 import { uiUtils } from '../utils/uiUtils.js';
+import { uiStateMachine, STATES } from '../utils/uiStateMachine.js';
 import { operationManager } from './OperationManager.js';
 import { mediaValidator } from '../utils/mediaValidator.js';
 
@@ -23,10 +24,8 @@ export const converterManager = {
             operationManager.startOperation('转换');
             state.conversionStartTime = Date.now();
             
-            elements.downloadBtn.style.display = 'none';
-            elements.convertBtn.style.display = 'inline-block';
-            elements.convertBtn.textContent = '点击停止 (0%)';
-            elements.convertBtn.disabled = false;
+            uiStateMachine.transitionTo(STATES.CONVERTING);
+            // uiUtils.updateStatusMessage('转换中...', 'converting');
             
             logger.log(`开始转换 ${state.videoDuration.toFixed(2)}秒 视频`);
 
@@ -45,37 +44,35 @@ export const converterManager = {
                 ? `压缩 ${compressionRatio.toFixed(1)}%` 
                 : `增大 ${Math.abs(compressionRatio).toFixed(1)}%`;
 
+            uiUtils.updateVideoFormatIndicator('MP4');
+
             logger.log('正在验证MP4文件...');
-            elements.convertBtn.textContent = '验证文件中...';
+            // elements.convertBtn.textContent = '验证文件中...';
             
             try {
                 await mediaValidator.validateMP4(state.mp4Blob);
-                uiUtils.updateProgress(100);
-                logger.log(`✅ 转换并验证成功！耗时 ${convertTime} 秒`);
-                uiUtils.updateStatusMessage('转换成功', 'success');
+                uiUtils.updateProgress(100, null, 'CONVERT');
+                logger.log(`转换并验证成功！耗时 ${convertTime} 秒`);
+                // uiUtils.updateStatusMessage('转换成功', 'success');
 
                 operationManager.endOperation('转换');
                 state.currentConversionPromise = null;
 
-                elements.convertBtn.style.display = 'none';
-                elements.downloadBtn.style.display = 'inline-block';
-                elements.downloadBtn.disabled = false;
+                uiStateMachine.transitionTo(STATES.CONVERTED);
                 
                 setTimeout(() => {
                     uiUtils.updateStatusMessage('摄像头未开启', 'default');
                 }, 5000);
                 
             } catch (validationError) {
-                logger.log(`❌ MP4文件验证失败: ${validationError.message}`);
+                logger.log(`MP4文件验证失败: ${validationError.message}`);
                 logger.log('文件可能已损坏，请重新转换');
-                uiUtils.updateStatusMessage('转换失败', 'error');
+                // uiUtils.updateStatusMessage('转换失败', 'error');
                 
                 operationManager.endOperation('转换');
                 state.currentConversionPromise = null;
-                uiUtils.updateProgress(0);
-                elements.convertBtn.disabled = false;
-                elements.convertBtn.style.display = 'inline-block';
-                elements.downloadBtn.style.display = 'none';
+                uiUtils.updateProgress(0, null, 'CONVERT');
+                uiStateMachine.transitionTo(STATES.RECORDED);
                 
                 setTimeout(() => {
                     uiUtils.updateStatusMessage('摄像头未开启', 'default');
@@ -84,11 +81,11 @@ export const converterManager = {
 
         } catch (error) {
             if (error.message && error.message.includes('cancelled')) {
-                logger.log('✅ 转换已正确取消');
+                logger.log('转换已正确取消');
             } else {
                 logger.log(`转换失败: ${error.message}`);
                 console.error('转换错误:', error);
-                uiUtils.updateStatusMessage('转换失败', 'error');
+                // uiUtils.updateStatusMessage('转换失败', 'error');
                 
                 setTimeout(() => {
                     uiUtils.updateStatusMessage('摄像头未开启', 'default');
@@ -99,9 +96,7 @@ export const converterManager = {
             state.currentConversionPromise = null;
             uiUtils.updateProgress(0);
             
-            elements.convertBtn.disabled = false;
-            elements.convertBtn.style.display = 'inline-block';
-            elements.downloadBtn.style.display = 'none';
+            uiStateMachine.transitionTo(STATES.RECORDED);
         }
     },
 
@@ -111,24 +106,24 @@ export const converterManager = {
         if (state.converter && state.converter.cancelConversion) {
             state.converter.cancelConversion();
         } else {
-            logger.log('⚠️ 转换器不支持取消功能');
+            logger.log('转换器不支持取消功能');
         }
         
         state.isConverting = false;
         state.currentConversionPromise = null;
         uiUtils.updateProgress(0);
-        elements.convertBtn.textContent = '转换为 MP4';
-        elements.convertBtn.disabled = false;
+        uiStateMachine.transitionTo(STATES.RECORDED);
         
         if (state.webmBlob && elements.video) {
             const webmUrl = URL.createObjectURL(state.webmBlob);
             elements.video.src = webmUrl;
             elements.video.controls = true;
             elements.video.muted = false;
-            uiUtils.updateVideoFormatIndicator('WebM');
-            logger.log('📹 已恢复WebM播放');
+            uiUtils.updateVideoFormatIndicator('WEBM');
+            logger.log('已恢复WebM播放');
         }
         
         logger.log('转换已取消，状态已重置');
+        operationManager.endOperation('转换');
     }
 };

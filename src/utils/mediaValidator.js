@@ -33,7 +33,7 @@ export const mediaValidator = {
                     isResolved = true;
                     const mp4Duration = testVideo.duration;
                     
-                    logger.log(`✅ MP4验证成功 - 时长: ${mp4Duration.toFixed(2)}秒, 尺寸: ${testVideo.videoWidth}x${testVideo.videoHeight}`);
+                    logger.log(`MP4验证成功 - 时长: ${mp4Duration.toFixed(2)}秒, 尺寸: ${testVideo.videoWidth}x${testVideo.videoHeight}`);
                     
                     const expectedDuration = state.actualRecordingDuration > 0 ? state.actualRecordingDuration : state.recordingSeconds;
                     const timeDiff = Math.abs(mp4Duration - expectedDuration);
@@ -60,7 +60,7 @@ export const mediaValidator = {
             const handleError = (errorMsg) => {
                 if (!isResolved) {
                     isResolved = true;
-                    logger.log(`❌ MP4验证失败: ${errorMsg}`);
+                    logger.log(`MP4验证失败: ${errorMsg}`);
                     cleanup();
                     reject(new Error(`文件验证失败: ${errorMsg}`));
                 }

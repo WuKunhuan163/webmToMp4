@@ -197,10 +197,10 @@ async function convertVideo(data) {
 function cancelCurrentTask() {
     isCancelled = true;
     if (currentTask) {
-        self.postMessage({ type: 'log', message: '🛑 Worker收到取消请求，准备强制终止' });
+        self.postMessage({ type: 'log', message: 'Worker收到取消请求，准备强制终止' });
         // FFmpeg.wasm无法中途取消，强制关闭Worker是唯一可靠方式
         setTimeout(() => {
-            self.postMessage({ type: 'log', message: '🛑 强制关闭Worker进程' });
+            self.postMessage({ type: 'log', message: '强制关闭Worker进程' });
             self.close();
         }, 100); // 短暂延迟确保消息发送
     }
@@ -224,7 +224,7 @@ async function resetWorkerState() {
             }
             self.postMessage({ type: 'log', message: 'Worker状态已重置' });
         } catch (error) {
-            self.postMessage({ type: 'log', message: `⚠️ 清理临时文件时出错: ${error.message}` });
+            self.postMessage({ type: 'log', message: `清理临时文件时出错: ${error.message}` });
         }
     }
 }
@@ -279,23 +279,23 @@ async function compositeVideo(data) {
     const { pptBackground, videoScale, overlayPosition, outputSize, autoTrimStart = true } = options;
     
     try {
-        self.postMessage({ type: 'log', message: '🎬 Worker开始背景合成...' });
+        self.postMessage({ type: 'log', message: 'Worker开始背景合成...' });
 
         // 写入视频文件
         const videoData = new Uint8Array(videoBuffer);
         await ffmpeg.writeFile('input_video.webm', videoData);
-        self.postMessage({ type: 'log', message: `📹 输入视频大小: ${videoData.length} bytes` });
+        self.postMessage({ type: 'log', message: `输入视频大小: ${videoData.length} bytes` });
 
         // 检测视频开始时间（可选）
         let startTime = 0;
         if (autoTrimStart) {
             // 简化实现：暂时不进行复杂的检测
-            self.postMessage({ type: 'log', message: '📹 自动裁剪功能已启用，但暂时不执行复杂检测' });
+            self.postMessage({ type: 'log', message: '自动裁剪功能已启用，但暂时不执行复杂检测' });
             startTime = 0; // 保持为0，避免复杂的Worker间通信
         }
 
         // 获取PPT背景图片
-        self.postMessage({ type: 'log', message: '📋 加载PPT背景图片...' });
+        self.postMessage({ type: 'log', message: '加载PPT背景图片...' });
         const response = await fetch(pptBackground);
         if (!response.ok) {
             throw new Error(`无法加载PPT图片: ${response.status} ${response.statusText}`);
@@ -306,7 +306,7 @@ async function compositeVideo(data) {
             throw new Error('PPT图片数据为空');
         }
         
-        self.postMessage({ type: 'log', message: `📋 PPT图片大小: ${pptData.length} bytes` });
+        self.postMessage({ type: 'log', message: `PPT图片大小: ${pptData.length} bytes` });
         await ffmpeg.writeFile('background.jpg', pptData);
         
         // 验证图片是否正确写入
@@ -315,18 +315,18 @@ async function compositeVideo(data) {
             if (verifyData.length === 0) {
                 throw new Error('图片写入失败');
             }
-            self.postMessage({ type: 'log', message: `📋 图片验证成功: ${verifyData.length} bytes` });
+            self.postMessage({ type: 'log', message: `图片验证成功: ${verifyData.length} bytes` });
         } catch (verifyError) {
             throw new Error(`图片验证失败: ${verifyError.message}`);
         }
 
-        self.postMessage({ type: 'log', message: `🎯 合成参数: 视频缩放=${videoScale}, 叠加位置=${overlayPosition}, 输出尺寸=${outputSize}` });
+        self.postMessage({ type: 'log', message: `合成参数: 视频缩放=${videoScale}, 叠加位置=${overlayPosition}, 输出尺寸=${outputSize}` });
         
         // 解析参数进行验证
         const [scaleW, scaleH] = videoScale.split(':').map(Number);
         const [overlayX, overlayY] = overlayPosition.split(':').map(Number);
         const [outW, outH] = outputSize.split(':').map(Number);
-        self.postMessage({ type: 'log', message: `🔍 解析参数: 视频=${scaleW}x${scaleH}, 位置=(${overlayX},${overlayY}), 输出=${outW}x${outH}` });
+        self.postMessage({ type: 'log', message: `解析参数: 视频=${scaleW}x${scaleH}, 位置=(${overlayX},${overlayY}), 输出=${outW}x${outH}` });
 
         // 确保输出尺寸是偶数（H.264要求）
         const [outputWidth, outputHeight] = outputSize.split(':').map(Number);
@@ -334,7 +334,7 @@ async function compositeVideo(data) {
         const evenHeight = outputHeight % 2 === 0 ? outputHeight : outputHeight + 1;
         const evenOutputSize = `${evenWidth}:${evenHeight}`;
         
-        self.postMessage({ type: 'log', message: `📐 调整输出尺寸: ${outputSize} -> ${evenOutputSize} (确保偶数)` });
+        self.postMessage({ type: 'log', message: `调整输出尺寸: ${outputSize} -> ${evenOutputSize} (确保偶数)` });
 
         // 构建FFmpeg命令 - 修复静态背景与动态视频叠加问题
         const command = [
@@ -364,28 +364,28 @@ async function compositeVideo(data) {
             'output_composite.mp4'
         );
 
-        self.postMessage({ type: 'log', message: `🔧 FFmpeg合成命令: ${command.join(' ')}` });
+        self.postMessage({ type: 'log', message: `FFmpeg合成命令: ${command.join(' ')}` });
         
         // 执行前检查输入文件
         try {
             const bgCheck = await ffmpeg.readFile('background.jpg');
             const videoCheck = await ffmpeg.readFile('input_video.webm');
-            self.postMessage({ type: 'log', message: `✅ 执行前检查 - 背景图片: ${bgCheck.length} bytes, 视频: ${videoCheck.length} bytes` });
+            self.postMessage({ type: 'log', message: `执行前检查 - 背景图片: ${bgCheck.length} bytes, 视频: ${videoCheck.length} bytes` });
         } catch (error) {
-            self.postMessage({ type: 'log', message: `❌ 执行前文件检查失败: ${error.message}` });
+            self.postMessage({ type: 'log', message: `执行前文件检查失败: ${error.message}` });
         }
         
         // 执行前检查取消状态
         if (isCancelled) {
-            self.postMessage({ type: 'log', message: '🛑 任务已取消，停止执行' });
+            self.postMessage({ type: 'log', message: '任务已取消，停止执行' });
             throw new Error('Task cancelled before execution');
         }
         
-        self.postMessage({ type: 'log', message: '🔧 执行FFmpeg合成命令...' });
+        self.postMessage({ type: 'log', message: '执行FFmpeg合成命令...' });
         
         // 由于FFmpeg.wasm无法中途取消，我们需要在这里强制重启Worker
         if (isCancelled) {
-            self.postMessage({ type: 'log', message: '🛑 强制终止Worker进程' });
+            self.postMessage({ type: 'log', message: '强制终止Worker进程' });
             self.close(); // 强制关闭Worker
             return;
         }
@@ -393,7 +393,7 @@ async function compositeVideo(data) {
         await ffmpeg.exec(command);
         
         // 执行后检查
-        self.postMessage({ type: 'log', message: '✅ FFmpeg命令执行完成，检查输出文件...' });
+        self.postMessage({ type: 'log', message: 'FFmpeg命令执行完成，检查输出文件...' });
 
         // 检查输出文件是否存在
         let outputData;
@@ -402,15 +402,15 @@ async function compositeVideo(data) {
             if (!outputData || outputData.length === 0) {
                 throw new Error('输出文件为空或不存在');
             }
-            self.postMessage({ type: 'log', message: `📤 输出文件大小: ${outputData.length} bytes` });
+            self.postMessage({ type: 'log', message: `输出文件大小: ${outputData.length} bytes` });
         } catch (fileError) {
-            self.postMessage({ type: 'log', message: `❌ 无法读取输出文件: ${fileError.message}` });
+            self.postMessage({ type: 'log', message: `无法读取输出文件: ${fileError.message}` });
             throw new Error(`合成失败：无法读取输出文件 - ${fileError.message}`);
         }
 
         // 验证文件大小
         if (outputData.length < 1000) { // 小于1KB可能是无效文件
-            self.postMessage({ type: 'log', message: `❌ 输出文件太小 (${outputData.length} bytes)，可能合成失败` });
+            self.postMessage({ type: 'log', message: `输出文件太小 (${outputData.length} bytes)，可能合成失败` });
             throw new Error('合成失败：输出文件太小，可能损坏');
         }
 
@@ -419,14 +419,14 @@ async function compositeVideo(data) {
         await ffmpeg.deleteFile('background.jpg');
         await ffmpeg.deleteFile('output_composite.mp4');
 
-        self.postMessage({ type: 'log', message: '✅ Worker背景合成完成！' });
+        self.postMessage({ type: 'log', message: 'Worker背景合成完成！' });
         self.postMessage({ 
             type: 'composite_complete', 
             buffer: outputData.buffer 
         }, [outputData.buffer]);
 
     } catch (error) {
-        self.postMessage({ type: 'log', message: `❌ Worker合成失败: ${error.message}` });
+        self.postMessage({ type: 'log', message: `Worker合成失败: ${error.message}` });
         self.postMessage({ type: 'error', message: error.message });
     }
 }
