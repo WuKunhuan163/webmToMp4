@@ -2,9 +2,11 @@ import { state } from './State.js';
 import { elements } from '../utils/dom.js';
 import { logger } from '../utils/logger.js';
 import { uiUtils } from '../utils/uiUtils.js';
+import { uiStateMachine, STATES } from '../utils/uiStateMachine.js';
 import { operationManager } from './OperationManager.js';
 import PathResolver from '../modules/path-resolver.js';
 import FFmpegProgressCalculator from '../modules/ffmpeg-progress-calculator.js';
+import OptimizedFFmpegConverter from '../modules/ffmpeg-converter-optimized.js';
 
 export const speakerModeManager = {
     pptImage: null,
@@ -17,11 +19,11 @@ export const speakerModeManager = {
             img.onload = () => {
                 this.pptImage = img;
                 this.pptAspectRatio = img.width / img.height;
-                logger.log(`[PathResolver v2.0] 📋 PPT图片已加载: ${img.width}x${img.height} (比例: ${this.pptAspectRatio.toFixed(2)})`);
+                logger.log(`[PathResolver v2.0] PPT图片已加载: ${img.width}x${img.height} (比例: ${this.pptAspectRatio.toFixed(2)})`);
                 resolve(img);
             };
             img.onerror = () => {
-                logger.log('[PathResolver v2.0] ❌ PPT图片加载失败');
+                logger.log('[PathResolver v2.0] PPT图片加载失败');
                 reject(new Error('PPT图片加载失败'));
             };
             img.src = PathResolver.resolveAsset('cover.jpg');
@@ -34,7 +36,7 @@ export const speakerModeManager = {
         }
 
         if (!elements.video.videoWidth) {
-            logger.log('⚠️ 请先录制视频');
+            logger.log('请先录制视频');
             return;
         }
 
@@ -87,30 +89,34 @@ export const speakerModeManager = {
         }
 
         ctx.drawImage(elements.video, x, y, videoWidth, videoHeight);
-        elements.speakerPreview.style.display = 'block';
-        logger.log(`🎬 预览已生成`);
+        elements.speakerPreview.dataset.active = 'true';
+        elements.speakerCanvas.dataset.active = 'false';
+        logger.log(`预览已生成`);
     },
 
     async generate() {
         if (!state.webmBlob) {
-            logger.log('❌ 请先录制视频');
+            logger.log('请先录制视频');
             return;
         }
         
         if (!operationManager.canStartOperation('合成')) return;
+        
+        uiStateMachine.transitionTo(STATES.SYNTHESIZING);
+        // uiUtils.updateStatusMessage('合成中...', 'compositing');
 
         if (!this.pptImage) {
             await this.loadPPTImage();
         }
 
-        logger.log('🎬 开始生成演讲者模式视频...');
+        logger.log('开始生成演讲者模式视频...');
         operationManager.startOperation('合成');
-        elements.generateSpeakerVideo.disabled = false;
-        elements.generateSpeakerVideo.textContent = '点击停止 (0%)';
+        // uiStateMachine.transitionTo(STATES.SYNTHESIZING);
 
-        elements.videoPosition.disabled = true;
-        elements.videoScale.disabled = true;
-        elements.videoMargin.disabled = true;
+    // Disable dropdowns
+    elements.videoPosition.disabled = true;
+    elements.videoScale.disabled = true;
+    elements.videoMargin.disabled = true;
         logger.log('🔒 合成期间已锁定预览选项');
 
         const originalProgressCallback = state.converter.onProgress;
@@ -128,13 +134,13 @@ export const speakerModeManager = {
             const result = speakerProgressCalculator.calculateProgress(percent, time);
             
             if (result.isValid) {
-                elements.generateSpeakerVideo.textContent = `点击停止 (${result.percent}%)`;
+                uiUtils.updateProgress(result.percent, result.time, 'SYNTHESIZE');
+                uiStateMachine.updateProgress('SYNTHESIZE', result.percent);
             } else if (result.reason.includes('准备阶段')) {
-                elements.generateSpeakerVideo.textContent = `点击停止 (准备中...)`;
+                // Ignore preparation phase logging for UI update
             }
             
-            elements.generateSpeakerVideo.disabled = false;
-            logger.log(`🎬 合成进度: ${result.percent}% (${result.reason})`);
+            logger.log(`合成进度: ${result.percent}% (${result.reason})`);
         });
 
         try {
@@ -178,7 +184,7 @@ export const speakerModeManager = {
                     break;
             }
             
-            logger.log(`📐 合成参数: 视频${videoWidth}x${videoHeight} 位置(${overlayX},${overlayY})`);
+            logger.log(`合成参数: 视频${videoWidth}x${videoHeight} 位置(${overlayX},${overlayY})`);
             
             const speakerVideoBlob = await state.converter.compositeVideoWithBackground(state.webmBlob, {
                 pptBackground: PathResolver.resolveAsset('cover.jpg'),
@@ -213,25 +219,28 @@ export const speakerModeManager = {
             speakerVideo.className = 'speaker-video';
             speakerVideo.style.cssText = 'width: 100%; max-width: 600px; margin-top: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);';
             
-            elements.speakerCanvas.style.display = 'none';
+            elements.speakerCanvas.dataset.active = 'false';
             elements.speakerPreview.appendChild(speakerVideo);
-            elements.speakerPreview.style.display = 'block';
+            elements.speakerPreview.dataset.active = 'true';
+        elements.speakerCanvas.dataset.active = 'false';
             
-            logger.log('✅ 演讲者模式视频生成完成！已在页面显示');
-            uiUtils.updateStatusMessage('合成成功', 'success');
+            logger.log('演讲者模式视频生成完成！已在页面显示');
+            // uiUtils.updateStatusMessage('合成成功', 'success');
             operationManager.endOperation('合成');
+            uiStateMachine.transitionTo(STATES.SYNTHESIZED);
             
             setTimeout(() => {
-                uiUtils.updateStatusMessage('摄像头未开启', 'default');
+                // uiUtils.updateStatusMessage('摄像头未开启', 'default');
             }, 5000);
             
         } catch (error) {
-            logger.log(`❌ 生成失败: ${error.message}`);
-            uiUtils.updateStatusMessage('合成失败', 'error');
+            logger.log(`生成失败: ${error.message}`);
+            // uiUtils.updateStatusMessage('合成失败', 'error');
             operationManager.endOperation('合成');
+            uiStateMachine.transitionTo(STATES.RECORDED);
             
             setTimeout(() => {
-                uiUtils.updateStatusMessage('摄像头未开启', 'default');
+                // uiUtils.updateStatusMessage('摄像头未开启', 'default');
             }, 5000);
         } finally {
             state.converter.setProgressCallback(originalProgressCallback);
@@ -239,9 +248,6 @@ export const speakerModeManager = {
             elements.videoPosition.disabled = false;
             elements.videoScale.disabled = false;
             elements.videoMargin.disabled = false;
-            
-            elements.generateSpeakerVideo.disabled = false;
-            elements.generateSpeakerVideo.textContent = '合成';
         }
     },
 
@@ -254,45 +260,44 @@ export const speakerModeManager = {
             }
             try {
                 state.converter.destroy();
-                import('../modules/ffmpeg-converter-optimized.js').then(module => {
-                    const OptimizedFFmpegConverter = module.default;
-                    state.converter = new OptimizedFFmpegConverter(true);
-                    state.converter.setLogCallback((message) => {
-                        logger.log(message);
-                    });
-                    state.converter.setProgressCallback((percent, time) => {
-                        if (!state.progressCalculator) {
-                            let totalDuration = state.actualRecordingDuration > 0 ? state.actualRecordingDuration : 
-                                              (state.videoDuration > 0 ? state.videoDuration : state.recordingSeconds);
-                            state.progressCalculator = FFmpegProgressCalculator.create(totalDuration, {
-                                skipInitialSeconds: 2,
-                                enableDebugLog: false,
-                                logCallback: logger.log
-                            });
-                        }
-                        const result = state.progressCalculator.calculateProgress(percent, time);
-                        if (result.isValid || result.percent === 100) {
-                            uiUtils.updateProgress(result.percent, result.time);
-                        }
-                    });
-                    state.converter.init().catch(error => {
-                        logger.log(`转换器重新初始化失败: ${error.message}`);
-                    });
+                
+                state.converter = new OptimizedFFmpegConverter(true);
+                state.converter.setLogCallback((message) => {
+                    logger.log(message);
                 });
+                state.converter.setProgressCallback((percent, time) => {
+                    if (!state.progressCalculator) {
+                        let totalDuration = state.actualRecordingDuration > 0 ? state.actualRecordingDuration : 
+                                            (state.videoDuration > 0 ? state.videoDuration : state.recordingSeconds);
+                        state.progressCalculator = FFmpegProgressCalculator.create(totalDuration, {
+                            skipInitialSeconds: 2,
+                            enableDebugLog: false,
+                            logCallback: logger.log
+                        });
+                    }
+                    const result = state.progressCalculator.calculateProgress(percent, time);
+                    if (result.isValid || result.percent === 100) {
+            uiUtils.updateProgress(result.percent, result.time, 'SYNTHESIZE');
+            uiStateMachine.updateProgress('SYNTHESIZE', result.percent);
+                    }
+                });
+                state.converter.init().catch(error => {
+                    logger.log(`转换器重新初始化失败: ${error.message}`);
+                });
+                
             } catch (error) {
                 logger.log(`转换器重置失败: ${error.message}`);
             }
         }
         
-        elements.generateSpeakerVideo.textContent = '合成';
-        elements.generateSpeakerVideo.disabled = false;
+        uiStateMachine.transitionTo(STATES.RECORDED);
         
         elements.videoPosition.disabled = false;
         elements.videoScale.disabled = false;
         elements.videoMargin.disabled = false;
         
-        elements.speakerCanvas.style.display = 'block';
-        if (elements.speakerPreview.style.display !== 'none') {
+        elements.speakerCanvas.dataset.active = 'true';
+        if (elements.speakerPreview.dataset.active === 'true') {
             setTimeout(() => {
                 speakerModeManager.preview();
             }, 100);

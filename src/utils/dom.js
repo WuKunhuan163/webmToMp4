@@ -2,6 +2,7 @@
 export const elements = {
     recordBtn: document.getElementById('recordBtn'),
     convertBtn: document.getElementById('convertBtn'),
+    cancelConvertBtn: document.getElementById('cancelConvertBtn'),
     downloadBtn: document.getElementById('downloadBtn'),
     closeCameraBtn: document.getElementById('closeCameraBtn'),
     video: document.getElementById('video'),
@@ -22,6 +23,7 @@ export const elements = {
     generateSpeakerVideo: document.getElementById('generateSpeakerVideo'),
     speakerPreview: document.getElementById('speakerPreview'),
     speakerCanvas: document.getElementById('speakerCanvas'),
+    cancelSpeakerBtn: document.getElementById('cancelSpeakerBtn'),
     copyLogBtn: document.getElementById('copyLogBtn'),
     videoFormatIndicator: document.getElementById('videoFormatIndicator')
 };

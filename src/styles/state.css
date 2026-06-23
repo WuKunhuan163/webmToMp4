@@ -1,0 +1,172 @@
+/* UI State Management using data-state */
+
+[data-state="INITIAL"] #convertBtn,
+[data-state="INITIAL"] #downloadBtn,
+[data-state="INITIAL"] #closeCameraBtn,
+[data-state="INITIAL"] #generateSpeakerVideo {
+    display: none;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+[data-state="CAMERA_ON"] #convertBtn,
+[data-state="CAMERA_ON"] #downloadBtn,
+[data-state="CAMERA_ON"] #generateSpeakerVideo {
+    display: none;
+}
+[data-state="CAMERA_ON"] #closeCameraBtn {
+    display: inline-block;
+}
+
+[data-state="RECORDING"] #convertBtn,
+[data-state="RECORDING"] #downloadBtn,
+[data-state="RECORDING"] #generateSpeakerVideo {
+    display: none;
+}
+[data-state="RECORDING"] #closeCameraBtn {
+    display: inline-block;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+[data-state="RECORDED"] #convertBtn,
+[data-state="RECORDED"] #closeCameraBtn,
+[data-state="RECORDED"] #generateSpeakerVideo {
+    display: inline-block;
+}
+[data-state="RECORDED"] #downloadBtn {
+    display: none;
+}
+
+[data-state="CONVERTING"] #convertBtn {
+    display: none;
+}
+[data-state="CONVERTING"] #cancelConvertBtn {
+    display: inline-block !important;
+}
+#cancelConvertBtn {
+    display: none;
+}
+[data-state="CONVERTING"] #recordBtn,
+[data-state="CONVERTING"] #downloadBtn,
+[data-state="CONVERTING"] #closeCameraBtn,
+[data-state="CONVERTING"] #generateSpeakerVideo {
+    display: inline-block;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+[data-state="CONVERTED"] #recordBtn,
+[data-state="CONVERTED"] #closeCameraBtn,
+[data-state="CONVERTED"] #downloadBtn,
+[data-state="CONVERTED"] #generateSpeakerVideo {
+    display: inline-block;
+}
+[data-state="CONVERTED"] #convertBtn {
+    display: inline-block;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+[data-state="SYNTHESIZING"] #generateSpeakerVideo {
+    display: none;
+}
+[data-state="SYNTHESIZING"] #cancelSpeakerBtn {
+    display: inline-block !important;
+}
+#cancelSpeakerBtn {
+    display: none;
+}
+[data-state="SYNTHESIZING"] #recordBtn,
+[data-state="SYNTHESIZING"] #convertBtn,
+[data-state="SYNTHESIZING"] #downloadBtn,
+[data-state="SYNTHESIZING"] #closeCameraBtn {
+    display: inline-block;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+[data-state="SYNTHESIZED"] #recordBtn,
+[data-state="SYNTHESIZED"] #closeCameraBtn,
+[data-state="SYNTHESIZED"] #downloadBtn {
+    display: inline-block;
+}
+[data-state="SYNTHESIZED"] #convertBtn,
+[data-state="SYNTHESIZED"] #generateSpeakerVideo {
+    display: inline-block;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+[data-state="INITIAL"] #speakerPreview,
+[data-state="CAMERA_ON"] #speakerPreview,
+[data-state="RECORDING"] #speakerPreview,
+[data-state="RECORDED"] #speakerPreview,
+[data-state="CONVERTING"] #speakerPreview,
+[data-state="CONVERTED"] #speakerPreview {
+    display: none;
+}
+[data-state="SYNTHESIZING"] #speakerPreview,
+[data-state="SYNTHESIZED"] #speakerPreview {
+    display: block;
+}
+
+/* Video Format Indicator */
+.video-format-indicator {
+    display: none !important;
+}
+.video-format-indicator[data-format="WEBM"],
+.video-format-indicator[data-format="MP4"] {
+    display: block !important;
+}
+.video-format-indicator::after {
+    content: attr(data-format);
+}
+
+/* Progress Container */
+[data-state="CONVERTING"] #progressContainer,
+[data-state="SYNTHESIZING"] #progressContainer {
+    display: block !important;
+}
+
+/* Speaker Mode Section interactions */
+[data-state="INITIAL"] #speakerModeSection,
+[data-state="CAMERA_ON"] #speakerModeSection,
+[data-state="RECORDING"] #speakerModeSection {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Stats panel display */
+[data-state="INITIAL"] #stats,
+[data-state="CAMERA_ON"] #stats,
+[data-state="RECORDING"] #stats {
+    display: none;
+}
+
+[data-state="RECORDED"] #stats,
+[data-state="CONVERTING"] #stats,
+[data-state="CONVERTED"] #stats,
+[data-state="SYNTHESIZING"] #stats,
+[data-state="SYNTHESIZED"] #stats {
+    display: grid;
+}
+
+/* Speaker Preview / Canvas toggle */
+#speakerPreview[data-active="true"] {
+    display: block !important;
+}
+
+#speakerPreview[data-active="false"],
+#speakerPreview:not([data-active="true"]) {
+    display: none;
+}
+
+#speakerCanvas[data-active="true"] {
+    display: block !important;
+}
+
+#speakerCanvas[data-active="false"],
+#speakerCanvas:not([data-active="true"]) {
+    display: none;
+}

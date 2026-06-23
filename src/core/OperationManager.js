@@ -7,7 +7,7 @@ export const operationManager = {
     canStartOperation: (operationType) => {
         if (state.operationInProgress) {
             const currentOp = state.isRecording ? '录制' : state.isConverting ? '转换' : state.isCompositing ? '合成' : '未知操作';
-            logger.log(`❌ 无法开始${operationType}：${currentOp}正在进行中`);
+            logger.log(`无法开始${operationType}：${currentOp}正在进行中`);
             return false;
         }
         return true;
@@ -15,19 +15,10 @@ export const operationManager = {
     
     startOperation: (operationType) => {
         state.operationInProgress = true;
-        if (operationType === '录制') {
-            elements.convertBtn.disabled = true;
-            elements.generateSpeakerVideo.disabled = true;
-        } else if (operationType === '转换') {
+        if (operationType === '转换') {
             state.isConverting = true;
-            elements.recordBtn.disabled = true;
-            elements.generateSpeakerVideo.disabled = true;
-            uiUtils.updateStatusMessage('转换中...', 'converting');
         } else if (operationType === '合成') {
             state.isCompositing = true;
-            elements.recordBtn.disabled = true;
-            elements.convertBtn.disabled = true;
-            uiUtils.updateStatusMessage('合成中...', 'compositing');
         }
         logger.log(`🔒 开始${operationType}，其他操作已锁定`);
     },
@@ -56,6 +47,6 @@ export const operationManager = {
             }
         }
         
-        logger.log(`🔓 ${operationType}完成，操作锁定已解除`);
+        logger.log(`${operationType}完成，操作锁定已解除`);
     }
 };

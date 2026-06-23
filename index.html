@@ -6,6 +6,7 @@
     <title>WebM to MP4</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23667eea'/%3E%3Cpath d='M8 10h16v2H8zm0 4h16v2H8zm0 4h12v2H8z' fill='white'/%3E%3Ccircle cx='22' cy='20' r='3' fill='%23f44336'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="/src/styles/main.css">
+    <link rel="stylesheet" href="/src/styles/state.css">
 </head>
 <body>
 <body>
@@ -31,10 +32,11 @@
                 <span class="camera-status" id="cameraStatus"></span>
                 <span id="cameraStatusText">摄像头状态</span>
                 <br><br>
-                <button class="btn" id="recordBtn">开始录制</button>
-                <button class="btn" id="convertBtn" disabled>转换为 MP4</button>
-                <button class="btn btn-success" id="downloadBtn" disabled style="display: none;">下载 MP4</button>
-                <button class="btn btn-danger" id="closeCameraBtn" disabled style="display: none;">关闭摄像头</button>
+                        <button class="btn" id="recordBtn" data-action="toggle-recording">开始录制</button>
+                <button class="btn" id="convertBtn" data-action="convert" disabled>转换为 MP4</button>
+                <button class="btn btn-secondary" id="cancelConvertBtn" data-action="cancel-convert" style="display: none;">取消转换</button>
+                <button class="btn btn-success" id="downloadBtn" data-action="download" disabled>下载 MP4</button>
+                <button class="btn btn-danger" id="closeCameraBtn" data-action="close-camera" disabled>关闭摄像头</button>
             </div>
         </div>
 
@@ -105,17 +107,18 @@
                 </div>
             </div>
             <div class="speaker-buttons">
-                <button class="btn btn-primary" id="generateSpeakerVideo" disabled>合成</button>
+                <button class="btn btn-primary" id="generateSpeakerVideo" data-action="generate-speaker" disabled>合成</button>
+                <button class="btn btn-secondary" id="cancelSpeakerBtn" data-action="cancel-speaker" style="display: none;">取消合成</button>
             </div>
-            <div class="speaker-preview" id="speakerPreview" style="display: none;">
-                <canvas id="speakerCanvas" width="1920" height="1080"></canvas>
+            <div class="speaker-preview" id="speakerPreview" data-active="false">
+                <canvas id="speakerCanvas" width="1920" height="1080" data-active="true"></canvas>
             </div>
         </div>
 
         <div class="section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="margin: 0;">转换日志</h3>
-                <button class="btn" id="copyLogBtn" style="padding: 8px 16px; font-size: 14px;">复制日志</button>
+                <button class="btn" id="copyLogBtn" data-action="copy-log" style="padding: 8px 16px; font-size: 14px;">复制日志</button>
             </div>
             <div id="log" class="log">等待初始化...</div>
         </div>

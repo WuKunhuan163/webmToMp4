@@ -1,30 +1,24 @@
+// uiUtils.js - UI Utilities
 import { elements } from './dom.js';
 import { logger } from './logger.js';
 import { state, CAMERA_STATUS_STABLE_COUNT } from '../core/State.js';
 
+import { uiStateMachine, STATES } from './uiStateMachine.js';
+
 export const uiUtils = {
-    updateProgress: (percent, currentTime = null) => {
+    updateProgress: (percent, currentTime = null, action = 'CONVERT') => {
         let realPercent = 0;
         if (currentTime && state.videoDuration > 0) {
             realPercent = Math.min(Math.round((currentTime / state.videoDuration) * 100), 100);
         } else if (percent === 100) {
             realPercent = 100;
+        } else {
+            realPercent = percent;
         }
         
-        if (state.isConverting) {
-            if (realPercent >= 100) {
-                elements.convertBtn.textContent = '转换完成';
-                elements.convertBtn.disabled = true;
-            } else {
-                const displayPercent = Math.max(realPercent, 0);
-                elements.convertBtn.textContent = `点击停止 (${displayPercent}%)`;
-                elements.convertBtn.disabled = false;
-            }
-        } else {
-            elements.convertBtn.textContent = '转换为 MP4';
-            elements.convertBtn.disabled = false;
-        }
-        elements.progressContainer.style.display = 'none';
+        elements.progressBar.style.width = `${Math.max(realPercent, 0)}%`;
+        elements.progressBar.textContent = `${Math.max(realPercent, 0)}%`;
+        uiStateMachine.updateProgress(action, Math.max(realPercent, 0));
     },
 
     formatFileSize: (bytes) => {
@@ -48,21 +42,22 @@ export const uiUtils = {
 
     updateVideoFormatIndicator: (format) => {
         if (format) {
-            elements.videoFormatIndicator.textContent = format.toUpperCase();
-            elements.videoFormatIndicator.style.display = 'block';
+            elements.videoFormatIndicator.dataset.format = format.toUpperCase();
             logger.log(`📺 视频格式指示器: ${format.toUpperCase()}`);
         } else {
-            elements.videoFormatIndicator.style.display = 'none';
+            elements.videoFormatIndicator.dataset.format = '';
         }
     },
 
     updateStatusMessage: (message, type = 'default') => {
+        // Now handled primarily by uiStateMachine, keeping this for fallback/direct updates
         elements.cameraStatusText.textContent = message;
         switch (type) {
             case 'success':
             case 'recording':
             case 'converting':
             case 'compositing':
+            case 'connected':
                 elements.cameraStatus.className = 'camera-status camera-on';
                 break;
             case 'error':
@@ -70,14 +65,13 @@ export const uiUtils = {
                 elements.cameraStatus.className = 'camera-status camera-off';
                 break;
         }
-        logger.log(`📱 状态消息更新: ${message} (类型: ${type})`);
+        logger.log(`📱 状态消息更新(直接): ${message}`);
     },
 
     updateCameraStatus: (isOn, isRecording = false, seconds = 0) => {
         if (isRecording) {
             elements.cameraStatus.className = 'camera-status camera-on';
             elements.cameraStatusText.textContent = `录制中… (${seconds}秒)`;
-            elements.closeCameraBtn.style.display = 'none';
             return;
         }
         
@@ -93,23 +87,14 @@ export const uiUtils = {
             if (isOn) {
                 elements.cameraStatus.className = 'camera-status camera-on';
                 elements.cameraStatusText.textContent = '摄像头已开启';
-                elements.closeCameraBtn.style.display = 'inline-block';
-                elements.closeCameraBtn.disabled = false;
             } else {
                 elements.cameraStatus.className = 'camera-status camera-off';
                 elements.cameraStatusText.textContent = '摄像头未开启';
-                elements.closeCameraBtn.style.display = 'none';
             }
         }
     },
 
     updateRecordButton: () => {
-        if (!state.cameraInitialized) {
-            elements.recordBtn.textContent = '开启摄像头';
-            elements.recordBtn.disabled = false;
-        } else if (!state.isRecording) {
-            elements.recordBtn.textContent = '开始录制';
-            elements.recordBtn.disabled = false;
-        }
+        // Now managed by state machine, no-op or fallback
     }
 };
