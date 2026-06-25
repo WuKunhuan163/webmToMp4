@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebM to MP4</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23667eea'/%3E%3Cpath d='M8 10h16v2H8zm0 4h16v2H8zm0 4h12v2H8z' fill='white'/%3E%3Ccircle cx='22' cy='20' r='3' fill='%23f44336'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="/src/styles/main.css">
-    <link rel="stylesheet" href="/src/styles/state.css">
+    <link rel="stylesheet" href="/stylesheets/main.css">
+    <link rel="stylesheet" href="/stylesheets/state.css">
 </head>
-<body>
 <body>
     <div class="container">
         <div class="header">
@@ -29,30 +28,33 @@
 
         <div class="section">
             <div class="main-controls">
-                <span class="camera-status" id="cameraStatus"></span>
-                <span id="cameraStatusText">摄像头状态</span>
-                <br><br>
-                        <button class="btn" id="recordBtn" data-action="toggle-recording">开始录制</button>
-                <button class="btn" id="convertBtn" data-action="convert" disabled>转换为 MP4</button>
-                <button class="btn btn-secondary" id="cancelConvertBtn" data-action="cancel-convert" style="display: none;">取消转换</button>
-                <button class="btn btn-success" id="downloadBtn" data-action="download" disabled>下载 MP4</button>
-                <button class="btn btn-danger" id="closeCameraBtn" data-action="close-camera" disabled>关闭摄像头</button>
+                <div class="status-container">
+                    <span class="camera-status" id="cameraStatus"></span>
+                    <span id="cameraStatusText"></span>
+                </div>
+                <div class="buttons-container">
+                    <button class="btn btn-block" id="recordBtn" data-action="toggle-recording">开始录制</button>
+                    <button class="btn btn-block" id="convertBtn" data-action="convert">转换为 MP4</button>
+                    <button class="btn btn-secondary btn-block" id="cancelConvertBtn" data-action="cancel-convert">取消转换</button>
+                    <button class="btn btn-success btn-block" id="downloadBtn" data-action="download">下载 MP4</button>
+                    <button class="btn btn-danger btn-block" id="closeCameraBtn" data-action="close-camera">关闭摄像头</button>
+                </div>
             </div>
         </div>
 
         <div class="section" style="position: relative;">
             <video id="video" autoplay muted></video>
-            <div id="videoFormatIndicator" class="video-format-indicator" style="display: none;">WebM</div>
+            <div id="videoFormatIndicator" class="video-format-indicator">WebM</div>
         </div>
 
         <div class="section">
-            <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-container" id="progressContainer">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
         </div>
 
         <div class="section">
-            <div class="stats" id="stats" style="display: none;">
+            <div class="stats" id="stats">
                 <div class="stat-item">
                     <div class="stat-label">原始大小</div>
                     <div class="stat-value" id="webmSize">-</div>
@@ -107,23 +109,26 @@
                 </div>
             </div>
             <div class="speaker-buttons">
-                <button class="btn btn-primary" id="generateSpeakerVideo" data-action="generate-speaker" disabled>合成</button>
-                <button class="btn btn-secondary" id="cancelSpeakerBtn" data-action="cancel-speaker" style="display: none;">取消合成</button>
+                <button class="btn btn-primary btn-block" id="generateSpeakerVideo" data-action="generate-speaker">合成</button>
+                <button class="btn btn-secondary btn-block" id="cancelSpeakerBtn" data-action="cancel-speaker">取消合成</button>
             </div>
-            <div class="speaker-preview" id="speakerPreview" data-active="false">
-                <canvas id="speakerCanvas" width="1920" height="1080" data-active="true"></canvas>
+            <div class="progress-container speaker-progress" id="speakerProgressContainer">
+                <div class="progress-bar" id="speakerProgressBar"></div>
+            </div>
+            <div class="speaker-preview" id="speakerPreview">
+                <canvas id="speakerCanvas" width="1920" height="1080"></canvas>
             </div>
         </div>
 
         <div class="section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="margin: 0;">转换日志</h3>
-                <button class="btn" id="copyLogBtn" data-action="copy-log" style="padding: 8px 16px; font-size: 14px;">复制日志</button>
+                <h3 style="margin: 0; line-height: 1;">转换日志</h3>
+                <button class="btn" id="copyLogBtn" data-action="copy-log" style="padding: 4px 8px; font-size: 12px; margin: 0; white-space: nowrap;">复制日志</button>
             </div>
             <div id="log" class="log">等待初始化...</div>
         </div>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/scripts/main.js"></script>
 </body>
 </html>

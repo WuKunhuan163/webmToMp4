@@ -22,6 +22,8 @@ export const elements = {
     videoMargin: document.getElementById('videoMargin'),
     generateSpeakerVideo: document.getElementById('generateSpeakerVideo'),
     speakerPreview: document.getElementById('speakerPreview'),
+    speakerProgressContainer: document.getElementById('speakerProgressContainer'),
+    speakerProgressBar: document.getElementById('speakerProgressBar'),
     speakerCanvas: document.getElementById('speakerCanvas'),
     cancelSpeakerBtn: document.getElementById('cancelSpeakerBtn'),
     copyLogBtn: document.getElementById('copyLogBtn'),

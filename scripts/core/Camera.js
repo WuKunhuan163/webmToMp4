@@ -44,6 +44,7 @@ export const cameraManager = {
             
             elements.video.srcObject = state.stream;
             state.cameraInitialized = true;
+            uiStateMachine.updateUI();
             uiUtils.updateCameraStatus(true);
             uiUtils.updateVideoFormatIndicator(null);
             logger.log('摄像头初始化成功');
@@ -52,6 +53,7 @@ export const cameraManager = {
             uiStateMachine.transitionTo(STATES.CAMERA_ON);
         } catch (error) {
             state.cameraInitialized = false;
+            uiStateMachine.updateUI();
             uiUtils.updateCameraStatus(false);
             logger.log(`摄像头初始化失败: ${error.message}`);
         }
@@ -69,6 +71,7 @@ export const cameraManager = {
                 elements.video.srcObject = null;
             }
             state.cameraInitialized = false;
+            uiStateMachine.updateUI();
             
             state.cameraStatusCheckCount = 0;
             state.lastCameraStatus = null;
@@ -80,7 +83,10 @@ export const cameraManager = {
             
             uiUtils.updateStatusMessage('摄像头未开启', 'default');
             
-            uiStateMachine.transitionTo(STATES.INITIAL);
+            // 仅仅当目前状态低于 RECORDED（即还未产生有用输出时）关闭摄像头才回退到 INITIAL
+            if (uiStateMachine.currentState === STATES.CAMERA_ON || uiStateMachine.currentState === STATES.RECORDING) {
+                uiStateMachine.transitionTo(STATES.INITIAL);
+            }
         }
     }
 };

@@ -16,8 +16,12 @@ export const uiUtils = {
             realPercent = percent;
         }
         
-        elements.progressBar.style.width = `${Math.max(realPercent, 0)}%`;
-        elements.progressBar.textContent = `${Math.max(realPercent, 0)}%`;
+        let targetBar = action === 'SYNTHESIZE' ? elements.speakerProgressBar : elements.progressBar;
+        
+        if (targetBar) {
+            targetBar.style.width = `${Math.max(realPercent, 0)}%`;
+            targetBar.textContent = `${Math.max(realPercent, 0)}%`;
+        }
         uiStateMachine.updateProgress(action, Math.max(realPercent, 0));
     },
 

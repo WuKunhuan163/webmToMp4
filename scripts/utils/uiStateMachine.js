@@ -5,6 +5,8 @@
 import { elements } from './dom.js';
 import { logger } from './logger.js';
 
+import { state } from '../core/State.js';
+
 export const STATES = {
     INITIAL: 'INITIAL',               // 初始状态，摄像头未开启
     CAMERA_ON: 'CAMERA_ON',           // 摄像头已开启，等待录制
@@ -30,6 +32,13 @@ class UIStateMachine {
     updateUI() {
         // 更新顶层容器的数据属性，实现 CSS 驱动的 UI 状态
         document.body.dataset.state = this.currentState;
+        
+        // Dynamic camera state attribute since camera status is independent of some application states
+        if (state.cameraInitialized) {
+            document.body.setAttribute('data-camera', 'on');
+        } else {
+            document.body.setAttribute('data-camera', 'off');
+        }
 
         // 更新文本状态消息以替代零散的 status updates
         let statusMessage = '';
@@ -84,15 +93,17 @@ class UIStateMachine {
                     cameraStatus.className = 'camera-status camera-on';
                     break;
                 case 'error':
-                default:
                     cameraStatus.className = 'camera-status camera-off';
+                    break;
+                default:
+                    cameraStatus.className = 'camera-status camera-default';
                     break;
             }
         }
         
         logger.log(`📱 状态消息更新: ${statusMessage}`);
 
-        // 根据状态更新按钮文本或特定属性
+        // Update text content
         const rBtn = elements.recordBtn;
         const cvBtn = elements.convertBtn;
         const dlBtn = elements.downloadBtn;
@@ -100,13 +111,10 @@ class UIStateMachine {
 
         switch (this.currentState) {
             case STATES.INITIAL:
-                if (rBtn) rBtn.textContent = '开启摄像头';
+            case STATES.CAMERA_ON:
+                if (rBtn) rBtn.textContent = this.currentState === STATES.INITIAL ? '开启摄像头' : '开始录制';
                 if (cvBtn) cvBtn.textContent = '转换为 MP4';
                 if (spkBtn) spkBtn.textContent = '合成';
-                break;
-
-            case STATES.CAMERA_ON:
-                if (rBtn) rBtn.textContent = '开始录制';
                 break;
 
             case STATES.RECORDING:
@@ -120,16 +128,17 @@ class UIStateMachine {
                 break;
 
             case STATES.CONVERTING:
-                if (cvBtn) cvBtn.textContent = '转换为 MP4';
+                if (cvBtn) cvBtn.textContent = '转换中...';
                 break;
 
             case STATES.CONVERTED:
+                if (rBtn) rBtn.textContent = '开启摄像头';
                 if (cvBtn) cvBtn.textContent = '转换完成';
                 if (spkBtn) spkBtn.textContent = '合成';
                 break;
 
             case STATES.SYNTHESIZING:
-                if (spkBtn) spkBtn.textContent = '合成';
+                if (spkBtn) spkBtn.textContent = '合成中...';
                 break;
 
             case STATES.SYNTHESIZED:
@@ -142,9 +151,9 @@ class UIStateMachine {
 
     updateProgress(action, percent) {
         if (action === 'CONVERT' && this.currentState === STATES.CONVERTING) {
-            elements.convertBtn.textContent = `转为 MP4 (${percent}%)`;
+            // We no longer update the button text, handled by uiUtils.updateProgress
         } else if (action === 'SYNTHESIZE' && this.currentState === STATES.SYNTHESIZING) {
-            elements.generateSpeakerVideo.textContent = `合成中 (${percent}%)`;
+            // We no longer update the button text, handled by uiUtils.updateProgress
         }
     }
 }
@@ -152,4 +161,4 @@ class UIStateMachine {
 export const uiStateMachine = new UIStateMachine();
 
 // 设置初始状态
-document.body.dataset.state = STATES.INITIAL;
+uiStateMachine.updateUI();

@@ -9,8 +9,9 @@ import { speakerModeManager } from './core/SpeakerMode.js';
 import OptimizedFFmpegConverter from './modules/ffmpeg-converter-optimized.js';
 import FFmpegProgressCalculator from './modules/ffmpeg-progress-calculator.js';
 import PathResolver from './modules/path-resolver.js';
-
 import { uiStateMachine, STATES } from './utils/uiStateMachine.js';
+import { sessionManager } from './utils/sessionManager.js';
+import { restoreState } from './core/State.js';
 
 class App {
     constructor() {
@@ -19,30 +20,95 @@ class App {
 
     async init() {
         if (this.initialized) return;
+        
+        const sid = sessionManager.init();
         this.initAgentRemoteControl();
         this.setupEventDelegation();
+        
         await this.preloadAssets();
         await this.initApp();
         this.initialized = true;
+        
+        // IndexedDB state is restored here AFTER app is initialized (converter ready)
+        const hasRestored = await restoreState();
+        if (hasRestored) {
+            logger.log(`已从当前 Session(${sid}) 的缓存中恢复上一次的视频`);
+            
+            elements.video.src = URL.createObjectURL(state.webmBlob);
+            uiUtils.updateVideoFormatIndicator('WEBM');
+            
+            // Restore stats info
+            elements.webmSize.textContent = uiUtils.formatFileSize(state.webmBlob.size);
+            
+            // Set operation manager states to ready
+            state.operationInProgress = false;
+            state.isCompositing = false;
+            state.isConverting = false;
+            
+            if (state.mp4Blob) {
+                elements.video.src = URL.createObjectURL(state.mp4Blob);
+                uiUtils.updateVideoFormatIndicator('MP4');
+                elements.mp4Size.textContent = uiUtils.formatFileSize(state.mp4Blob.size);
+                
+                if (state.conversionTimeFormatted) {
+                    elements.convertTime.textContent = state.conversionTimeFormatted;
+                }
+                if (state.compressionRatioStr) {
+                    elements.compressionRatio.textContent = state.compressionRatioStr;
+                }
+                
+                uiStateMachine.transitionTo(STATES.CONVERTED);
+            } else {
+                uiStateMachine.transitionTo(STATES.RECORDED);
+            }
+        }
     }
     initAgentRemoteControl() {
         try {
             const eventSource = new EventSource('/agent-sse');
-            eventSource.onmessage = (event) => {
+            eventSource.onmessage = async (event) => {
                 try {
                     const data = JSON.parse(event.data);
+                    let commandResult = { success: true };
+                    
                     if (data.type === 'connected') {
                         logger.log('Agent 远程控制通道已连接');
+                    } else if (data.action === 'reload') {
+                        logger.log('[Agent] Reloading page');
+                        // 先响应后端，再刷新
+                        if (data.id) {
+                           try {
+                               await fetch(`/agent-result/${data.id}`, {
+                                   method: 'POST',
+                                   headers: { 'Content-Type': 'application/json' },
+                                   body: JSON.stringify({ success: true, message: 'Reloading...' })
+                               });
+                           } catch(e) {}
+                        }
+                        setTimeout(() => window.location.reload(), 100);
+                        return; // 不再走后面的 fetch
                     } else if (data.action === 'click') {
                         const el = document.querySelector(data.selector);
                         if (el) {
                             el.click();
                             logger.log(`[Agent] Clicked ${data.selector}`);
+                            commandResult.message = `Clicked ${data.selector}`;
+                        } else {
+                            commandResult = { success: false, error: `Element not found: ${data.selector}` };
                         }
                     } else if (data.action === 'state') {
                         // 后端直接指令状态转移
                         uiStateMachine.transitionTo(STATES[data.targetState]);
                         logger.log(`[Agent] 强制转移状态到 ${data.targetState}`);
+                    }
+                    
+                    // Reply back to backend if it's a tracked command
+                    if (data.id) {
+                       await fetch(`/agent-result/${data.id}`, {
+                           method: 'POST',
+                           headers: { 'Content-Type': 'application/json' },
+                           body: JSON.stringify(commandResult)
+                       });
                     }
                 } catch (e) {
                     console.error('[Agent] SSE Error', e);
@@ -83,8 +149,11 @@ class App {
 
     downloadMP4() {
         if (state.mp4Blob) {
-            uiUtils.downloadFile(state.mp4Blob, 'converted.mp4');
-            logger.log('MP4 文件下载开始');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+            const hash = Math.random().toString(36).substring(2, 8);
+            const filename = `converted_${timestamp}_${hash}.mp4`;
+            uiUtils.downloadFile(state.mp4Blob, filename);
+            logger.log(`MP4 文件下载开始: ${filename}`);
         }
     }
 

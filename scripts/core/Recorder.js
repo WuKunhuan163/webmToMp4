@@ -1,4 +1,4 @@
-import { state } from './State.js';
+import { state, persistState, restoreState } from './State.js';
 import { elements } from '../utils/dom.js';
 import { logger } from '../utils/logger.js';
 import { uiUtils } from '../utils/uiUtils.js';
@@ -19,7 +19,7 @@ export const recorderManager = {
         // 每次开始录制前，清理可能残留的数据与视图状态
         state.webmBlob = null;
         state.mp4Blob = null;
-        // elements.stats.style.display = 'none'; // Controlled by CSS data-state
+        // DOM display handling has been fully migrated to state.css
         const existingVideo = elements.speakerPreview.querySelector('.speaker-video');
         if (existingVideo) existingVideo.remove();
         elements.speakerCanvas.dataset.active = 'true';
@@ -105,7 +105,7 @@ export const recorderManager = {
             };
             
             elements.webmSize.textContent = uiUtils.formatFileSize(state.webmBlob.size);
-            // elements.stats.style.display = 'grid'; // Controlled by CSS data-state
+            // DOM display handling has been fully migrated to state.css
             
             uiUtils.updateVideoFormatIndicator('WEBM');
             
@@ -117,6 +117,9 @@ export const recorderManager = {
             
             logger.log(`录制完成，文件大小: ${uiUtils.formatFileSize(state.webmBlob.size)}`);
             logger.log('录制回放已恢复声音');
+            
+            // 每次产生合法视频后持久化
+            persistState();
             
             logger.log('录制完成，自动关闭摄像头以节省资源');
             cameraManager.close();

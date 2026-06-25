@@ -1,5 +1,8 @@
 import { elements } from './dom.js';
 
+// 初始化全局日志数组供 Agent CDP 抓取
+window.__agentLogs = window.__agentLogs || [];
+
 export const logger = {
     log: (message) => {
         // 去除或替换不专业的表情符号和杂乱日志
@@ -25,10 +28,19 @@ export const logger = {
         }
         
         const timestamp = new Date().toLocaleTimeString();
-        elements.log.textContent += `[${timestamp}] ${cleanMessage}\n`;
-        elements.log.scrollTop = elements.log.scrollHeight;
+        
+        // 记录到内存供抓取
+        window.__agentLogs.push(`[${timestamp}] ${cleanMessage}`);
+        
+        if(elements.log) {
+            elements.log.textContent += `[${timestamp}] ${cleanMessage}\n`;
+            elements.log.scrollTop = elements.log.scrollHeight;
+        }
     },
-
+    error: (msg) => {
+        window.__agentLogs.push(`[ERROR] ${msg}`);
+        if(elements.log) elements.log.textContent += `[ERROR] ${msg}\n`;
+    },
     copyLog: () => {
         const logText = elements.log.textContent;
         

@@ -2,8 +2,8 @@ import { state } from './State.js';
 import { elements } from '../utils/dom.js';
 import { logger } from '../utils/logger.js';
 import { uiUtils } from '../utils/uiUtils.js';
-import { uiStateMachine, STATES } from '../utils/uiStateMachine.js';
 import { operationManager } from './OperationManager.js';
+import { uiStateMachine, STATES } from '../utils/uiStateMachine.js';
 import PathResolver from '../modules/path-resolver.js';
 import FFmpegProgressCalculator from '../modules/ffmpeg-progress-calculator.js';
 import OptimizedFFmpegConverter from '../modules/ffmpeg-converter-optimized.js';
@@ -114,12 +114,10 @@ export const speakerModeManager = {
         // uiStateMachine.transitionTo(STATES.SYNTHESIZING);
 
     // Disable dropdowns
-    elements.videoPosition.disabled = true;
-    elements.videoScale.disabled = true;
-    elements.videoMargin.disabled = true;
+    // JS controlled disabled logic removed - UI state is fully driven by data-state CSS
         logger.log('🔒 合成期间已锁定预览选项');
 
-        const originalProgressCallback = state.converter.onProgress;
+        const originalProgressCallback = state.converter?.onProgress;
         
         const totalDuration = state.actualRecordingDuration > 0 ? state.actualRecordingDuration : 
                             (state.videoDuration > 0 ? state.videoDuration : state.recordingSeconds);
@@ -245,9 +243,7 @@ export const speakerModeManager = {
         } finally {
             state.converter.setProgressCallback(originalProgressCallback);
             
-            elements.videoPosition.disabled = false;
-            elements.videoScale.disabled = false;
-            elements.videoMargin.disabled = false;
+            // JS controlled disabled logic removed
         }
     },
 
@@ -292,9 +288,7 @@ export const speakerModeManager = {
         
         uiStateMachine.transitionTo(STATES.RECORDED);
         
-        elements.videoPosition.disabled = false;
-        elements.videoScale.disabled = false;
-        elements.videoMargin.disabled = false;
+        // JS controlled disabled logic removed
         
         elements.speakerCanvas.dataset.active = 'true';
         if (elements.speakerPreview.dataset.active === 'true') {

@@ -32,18 +32,17 @@ export const operationManager = {
         }
         
         if (!state.isRecording) {
-            elements.recordBtn.disabled = false;
+            // DOM 属性修改已移除，统一由 CSS data-state 驱动
         }
         if (state.webmBlob && !state.isConverting && !state.isCompositing) {
-            elements.convertBtn.disabled = false;
-            elements.generateSpeakerVideo.disabled = false;
+            // DOM 属性修改已移除，统一由 CSS data-state 驱动
         }
         
         if (operationType !== '录制') {
             if (state.cameraInitialized && state.stream) {
-                uiUtils.updateCameraStatus(true);
+                // Keep connected status
             } else {
-                uiUtils.updateStatusMessage('摄像头未开启', 'default');
+                // Keep default status
             }
         }
         

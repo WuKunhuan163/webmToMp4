@@ -1,0 +1,179 @@
+/* UI State Management using data-state */
+
+/* ----------------------------------------------------
+   Core Buttons Logic: Only display buttons that make
+   sense for the current state.
+   ---------------------------------------------------- */
+
+/* Hidden by default until recorded */
+#convertBtn,
+#downloadBtn,
+#closeCameraBtn,
+#cancelConvertBtn,
+#cancelSpeakerBtn {
+    display: none !important;
+}
+
+/* INITIAL: Only show "Turn On Camera" */
+[data-state="INITIAL"] #recordBtn {
+    display: block !important;
+}
+
+/* CAMERA_ON: Show "Start Recording" and "Close Camera" */
+[data-state="CAMERA_ON"] #recordBtn,
+[data-state="CAMERA_ON"] #closeCameraBtn {
+    display: block !important;
+}
+
+/* RECORDING: Show "Stop Recording" and disabled "Close Camera" */
+[data-state="RECORDING"] #recordBtn {
+    display: block !important;
+}
+[data-state="RECORDING"] #closeCameraBtn {
+    display: block !important;
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+
+/* RECORDED: Show Re-record, Convert, and Close Camera */
+[data-state="RECORDED"] #recordBtn,
+[data-state="RECORDED"] #convertBtn {
+    display: block !important;
+}
+[data-state="RECORDED"] #closeCameraBtn {
+    display: none !important;
+}
+
+/* CONVERTING: Show disabled buttons and Cancel Convert */
+[data-state="CONVERTING"] #recordBtn,
+[data-state="CONVERTING"] #closeCameraBtn {
+    display: block !important;
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+[data-state="CONVERTING"] #cancelConvertBtn {
+    display: block !important;
+}
+
+/* CONVERTED: Show Re-record, Download, and Close Camera (only if camera is initialized) */
+[data-state="CONVERTED"] #recordBtn,
+[data-state="CONVERTED"] #downloadBtn {
+    display: block !important;
+}
+[data-state="CONVERTED"] #closeCameraBtn {
+    display: none !important;
+}
+[data-state="CONVERTED"] #convertBtn {
+    display: block !important;
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+
+/* SYNTHESIZING: Disable all main buttons, show Cancel Synthesize */
+[data-state="SYNTHESIZING"] #recordBtn,
+[data-state="SYNTHESIZING"] #closeCameraBtn {
+    display: block !important;
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+[data-state="SYNTHESIZING"] #cancelSpeakerBtn {
+    display: block !important;
+}
+
+/* SYNTHESIZED: Equivalent to RECORDED but maybe with disabled Synthesize */
+[data-state="SYNTHESIZED"] #recordBtn {
+    display: block !important;
+}
+
+/* Camera independent toggle */
+body[data-camera="on"] #closeCameraBtn {
+    display: block !important;
+}
+body[data-camera="off"] #closeCameraBtn {
+    display: none !important;
+}
+
+/* ----------------------------------------------------
+   Speaker Mode Buttons Logic
+   ---------------------------------------------------- */
+[data-state="INITIAL"] #generateSpeakerVideo,
+[data-state="CAMERA_ON"] #generateSpeakerVideo,
+[data-state="RECORDING"] #generateSpeakerVideo,
+[data-state="CONVERTING"] #generateSpeakerVideo,
+[data-state="SYNTHESIZING"] #generateSpeakerVideo {
+    display: block !important;
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+
+[data-state="RECORDED"] #generateSpeakerVideo,
+[data-state="CONVERTED"] #generateSpeakerVideo,
+[data-state="SYNTHESIZED"] #generateSpeakerVideo {
+    display: block !important;
+}
+
+[data-state="INITIAL"] #speakerPreview,
+[data-state="CAMERA_ON"] #speakerPreview,
+[data-state="RECORDING"] #speakerPreview,
+[data-state="RECORDED"] #speakerPreview,
+[data-state="CONVERTING"] #speakerPreview,
+[data-state="CONVERTED"] #speakerPreview {
+    display: none;
+}
+[data-state="SYNTHESIZING"] #speakerPreview,
+[data-state="SYNTHESIZED"] #speakerPreview {
+    display: block;
+}
+
+/* Video Format Indicator */
+.video-format-indicator {
+    display: none;
+}
+.video-format-indicator[data-format="WEBM"],
+.video-format-indicator[data-format="MP4"] {
+    display: block;
+}
+.video-format-indicator::after {
+    content: attr(data-format);
+}
+
+/* Progress Container */
+#progressContainer, #speakerProgressContainer {
+    display: none;
+}
+[data-state="CONVERTING"] #progressContainer {
+    display: block;
+}
+[data-state="SYNTHESIZING"] #speakerProgressContainer {
+    display: block;
+}
+
+[data-state="INITIAL"] #speakerModeSection select,
+[data-state="CAMERA_ON"] #speakerModeSection select,
+[data-state="RECORDING"] #speakerModeSection select,
+[data-state="CONVERTING"] #speakerModeSection select,
+[data-state="SYNTHESIZING"] #speakerModeSection select {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Stats panel display */
+[data-state="INITIAL"] #stats,
+[data-state="CAMERA_ON"] #stats,
+[data-state="RECORDING"] #stats {
+    display: none;
+}
+
+[data-state="RECORDED"] #stats,
+[data-state="CONVERTING"] #stats,
+[data-state="CONVERTED"] #stats,
+[data-state="SYNTHESIZING"] #stats,
+[data-state="SYNTHESIZED"] #stats {
+    display: grid;
+}
+
+/* Speaker Preview / Canvas toggle */
+[data-state="SYNTHESIZING"] #speakerPreview,
+[data-state="SYNTHESIZED"] #speakerPreview {
+    display: block !important;
+}

@@ -1,4 +1,4 @@
-import { state } from './State.js';
+import { state, persistState, restoreState } from './State.js';
 import { elements } from '../utils/dom.js';
 import { logger } from '../utils/logger.js';
 import { uiUtils } from '../utils/uiUtils.js';
@@ -39,10 +39,14 @@ export const converterManager = {
             const compressionRatio = ((state.webmBlob.size - state.mp4Blob.size) / state.webmBlob.size * 100);
 
             elements.mp4Size.textContent = uiUtils.formatFileSize(state.mp4Blob.size);
-            elements.convertTime.textContent = convertTime + ' 秒';
-            elements.compressionRatio.textContent = compressionRatio > 0 
+            
+            state.conversionTimeFormatted = convertTime + ' 秒';
+            elements.convertTime.textContent = state.conversionTimeFormatted;
+            
+            state.compressionRatioStr = compressionRatio > 0 
                 ? `压缩 ${compressionRatio.toFixed(1)}%` 
                 : `增大 ${Math.abs(compressionRatio).toFixed(1)}%`;
+            elements.compressionRatio.textContent = state.compressionRatioStr;
 
             uiUtils.updateVideoFormatIndicator('MP4');
 
@@ -59,6 +63,9 @@ export const converterManager = {
                 state.currentConversionPromise = null;
 
                 uiStateMachine.transitionTo(STATES.CONVERTED);
+                
+                // Persist the newly generated mp4 blob
+                persistState();
                 
                 setTimeout(() => {
                     uiUtils.updateStatusMessage('摄像头未开启', 'default');
