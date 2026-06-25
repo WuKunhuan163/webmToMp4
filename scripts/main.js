@@ -13,6 +13,11 @@ import { uiStateMachine, STATES } from './utils/uiStateMachine.js';
 import { sessionManager } from './utils/sessionManager.js';
 import { restoreState } from './core/State.js';
 
+// 暴露给全局以便测试与 Agent 注入状态
+window.__state = state;
+window.__uiStateMachine = uiStateMachine;
+window.__STATES = STATES;
+
 class App {
     constructor() {
         this.initialized = false;
@@ -138,6 +143,13 @@ class App {
                         // 后端直接指令状态转移
                         uiStateMachine.transitionTo(STATES[data.targetState]);
                         logger.log(`[Agent] 强制转移状态到 ${data.targetState}`);
+                    } else if (data.action === 'eval') {
+                        try {
+                            const result = await eval(`(async () => { ${data.code} })()`);
+                            commandResult.message = result ? String(result) : 'Evaluated successfully';
+                        } catch (err) {
+                            commandResult = { success: false, error: err.message };
+                        }
                     }
                     
                     // Reply back to backend if it's a tracked command
