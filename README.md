@@ -77,14 +77,19 @@ npm run preview
 
 ### Continuous Deployment (CI/CD)
 
-This repository is configured with a **GitHub Actions** workflow (`.github/workflows/deploy.yml`) that achieves a fully automated deployment closed-loop:
+This project supports dual deployment:
 
-1. **Commit & Push**: Whenever you push code to the `main` branch, the GitHub Action is automatically triggered.
-2. **Cloud Build**: The CI server checks out the code, installs dependencies, and runs `npm run build` in a clean Ubuntu environment.
-3. **Artifact Publishing**: The resulting `/dist` folder is automatically published to **GitHub Pages**.
+1. **Vercel (Recommended)**: 
+   The project is configured for Vercel. You can view the live production build at:
+   **[https://webm-to-mp4-navy.vercel.app](https://webm-to-mp4-navy.vercel.app)**
+   
+   To deploy manually via CLI:
+   ```bash
+   vercel deploy --prod
+   ```
 
-**To enable this in your fork:**
-Go to your repository settings -> `Pages` -> Set `Source` to **GitHub Actions**. No manual deployment steps or server maintenance are required.
+2. **GitHub Pages**:
+   The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically builds and publishes the `/dist` folder to GitHub Pages upon pushing to the `main` branch.
 
 ## 📄 License
 MIT License.
