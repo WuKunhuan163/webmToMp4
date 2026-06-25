@@ -31,21 +31,16 @@ class App {
         
         // IndexedDB state is restored here AFTER app is initialized (converter ready)
         const hasRestored = await restoreState();
-        console.log('[main] hasRestored:', hasRestored);
-        console.log('[main] state.speakerBlob exists?', !!state.speakerBlob);
-        console.log('[main] state.mp4Blob exists?', !!state.mp4Blob);
         
         if (hasRestored) {
             logger.log(`已从当前 Session(${sid}) 的缓存中恢复上一次的视频`);
             
             // Wait for video data to load before trying to draw the preview
             elements.video.onloadeddata = () => {
-                console.log('[main] [Trace] elements.video.onloadeddata fired! Generating preview thumb...');
                 speakerModeManager.preview();
             };
             
             elements.video.src = URL.createObjectURL(state.webmBlob);
-            console.log('[main] Set elements.video.src to webmBlob');
             
             uiUtils.updateVideoFormatIndicator('WEBM');
             
@@ -59,7 +54,6 @@ class App {
             
             if (state.mp4Blob) {
                 elements.video.src = URL.createObjectURL(state.mp4Blob);
-                console.log('[main] Re-set elements.video.src to mp4Blob');
                 uiUtils.updateVideoFormatIndicator('MP4');
                 elements.mp4Size.textContent = uiUtils.formatFileSize(state.mp4Blob.size);
                 
@@ -73,7 +67,6 @@ class App {
                 
             // Restore speaker blob if it exists
             if (state.speakerBlob) {
-                console.log('[main] [Trace] Restoring speakerVideo element...');
                 const downloadUrl = URL.createObjectURL(state.speakerBlob);
                 const speakerVideo = document.createElement('video');
                 speakerVideo.src = downloadUrl;
@@ -82,7 +75,6 @@ class App {
                 
                 // Wait for the video to be ready before removing the canvas from view
                 speakerVideo.oncanplay = () => {
-                    console.log('[main] [Trace] speakerVideo is ready to play. Hiding canvas to prevent duplication.');
                     elements.speakerCanvas.style.display = 'none';
                 };
                 
@@ -92,22 +84,16 @@ class App {
                 };
                 
                 elements.speakerPreview.appendChild(speakerVideo);
-                console.log('[main] [Trace] Appended speakerVideo to elements.speakerPreview');
             }
             
             // Determine final state
             if (state.speakerBlob) {
-                console.log('[main] Transitioning to SYNTHESIZED state');
                 uiStateMachine.transitionTo(STATES.SYNTHESIZED);
             } else if (state.mp4Blob) {
-                console.log('[main] Transitioning to CONVERTED state');
                 uiStateMachine.transitionTo(STATES.CONVERTED);
             } else {
-                console.log('[main] Transitioning to RECORDED state');
                 uiStateMachine.transitionTo(STATES.RECORDED);
             }
-            
-            console.log('[main] Restore state complete. Current DOM state CSS:', document.body.getAttribute('data-state'));
         }
     }
     initAgentRemoteControl() {

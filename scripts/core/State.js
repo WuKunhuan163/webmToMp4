@@ -53,7 +53,6 @@ function getDB() {
 }
 
 export async function persistState() {
-    console.trace('[State] persistState called');
     if (!state.webmBlob) return;
     
     const sid = sessionManager.getSid();

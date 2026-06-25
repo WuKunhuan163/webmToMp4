@@ -31,19 +31,15 @@ export const speakerModeManager = {
     },
 
     async preview() {
-        console.log('[SpeakerMode] [Trace] preview() started. Checking if pptImage is loaded...');
         if (!this.pptImage) {
             await this.loadPPTImage();
-            console.log('[SpeakerMode] [Trace] pptImage loaded.');
         }
 
         if (!elements.video.videoWidth) {
-            console.warn('[SpeakerMode] [Trace] elements.video.videoWidth is 0! Cannot render thumb. video readyState:', elements.video.readyState);
             logger.log('请先录制视频');
             return;
         }
 
-        console.log('[SpeakerMode] [Trace] Getting Canvas 2D context...');
         const canvas = elements.speakerCanvas;
         const ctx = canvas.getContext('2d');
         const scale = parseFloat(elements.videoScale.value);
@@ -51,11 +47,9 @@ export const speakerModeManager = {
         canvas.width = this.pptImage.width;
         canvas.height = this.pptImage.height;
 
-        console.log(`[SpeakerMode] [Trace] Drawing PPT background at 0,0 (${canvas.width}x${canvas.height})`);
         ctx.drawImage(this.pptImage, 0, 0);
 
         const videoAspectRatio = elements.video.videoWidth / elements.video.videoHeight;
-        console.log(`[SpeakerMode] [Trace] Video dimensions: ${elements.video.videoWidth}x${elements.video.videoHeight}, ratio: ${videoAspectRatio}`);
 
         let videoWidth, videoHeight;
         
@@ -94,18 +88,15 @@ export const speakerModeManager = {
                 break;
         }
 
-        console.log(`[SpeakerMode] [Trace] Drawing Video frame onto Canvas at x:${x}, y:${y}, w:${videoWidth}, h:${videoHeight}`);
         try {
             ctx.drawImage(elements.video, x, y, videoWidth, videoHeight);
-            console.log('[SpeakerMode] [Trace] drawImage executed successfully.');
         } catch (e) {
-            console.error('[SpeakerMode] [Trace] drawImage failed!', e);
+            // Ignore minor drawImage errors during rapid state changes
         }
         
         // 关键：画完之后，如果此时还没有合成好视频，就让骨架屏显示！
         // 如果已经有合成好的视频（即它没被删除），那么骨架屏就在底下安静待着。
         elements.speakerCanvas.style.display = 'block';
-        console.log('[SpeakerMode] [Trace] speakerCanvas display block set.');
         
         logger.log(`预览已生成`);
     },
@@ -234,7 +225,6 @@ export const speakerModeManager = {
             speakerVideo.className = 'speaker-video';
             
             speakerVideo.oncanplay = () => {
-                console.log('[SpeakerMode] [Trace] speakerVideo is ready to play. Hiding canvas to prevent visual duplication under the transparent video.');
                 elements.speakerCanvas.style.display = 'none';
             };
             
