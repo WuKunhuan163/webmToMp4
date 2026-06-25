@@ -1,4 +1,4 @@
-import { state } from './State.js';
+import { state, persistState } from './State.js';
 import { elements } from '../utils/dom.js';
 import { logger } from '../utils/logger.js';
 import { uiUtils } from '../utils/uiUtils.js';
@@ -31,15 +31,19 @@ export const speakerModeManager = {
     },
 
     async preview() {
+        console.log('[SpeakerMode] [Trace] preview() started. Checking if pptImage is loaded...');
         if (!this.pptImage) {
             await this.loadPPTImage();
+            console.log('[SpeakerMode] [Trace] pptImage loaded.');
         }
 
         if (!elements.video.videoWidth) {
+            console.warn('[SpeakerMode] [Trace] elements.video.videoWidth is 0! Cannot render thumb. video readyState:', elements.video.readyState);
             logger.log('请先录制视频');
             return;
         }
 
+        console.log('[SpeakerMode] [Trace] Getting Canvas 2D context...');
         const canvas = elements.speakerCanvas;
         const ctx = canvas.getContext('2d');
         const scale = parseFloat(elements.videoScale.value);
@@ -47,9 +51,11 @@ export const speakerModeManager = {
         canvas.width = this.pptImage.width;
         canvas.height = this.pptImage.height;
 
+        console.log(`[SpeakerMode] [Trace] Drawing PPT background at 0,0 (${canvas.width}x${canvas.height})`);
         ctx.drawImage(this.pptImage, 0, 0);
 
         const videoAspectRatio = elements.video.videoWidth / elements.video.videoHeight;
+        console.log(`[SpeakerMode] [Trace] Video dimensions: ${elements.video.videoWidth}x${elements.video.videoHeight}, ratio: ${videoAspectRatio}`);
 
         let videoWidth, videoHeight;
         
@@ -88,9 +94,19 @@ export const speakerModeManager = {
                 break;
         }
 
-        ctx.drawImage(elements.video, x, y, videoWidth, videoHeight);
-        elements.speakerPreview.dataset.active = 'true';
-        elements.speakerCanvas.dataset.active = 'false';
+        console.log(`[SpeakerMode] [Trace] Drawing Video frame onto Canvas at x:${x}, y:${y}, w:${videoWidth}, h:${videoHeight}`);
+        try {
+            ctx.drawImage(elements.video, x, y, videoWidth, videoHeight);
+            console.log('[SpeakerMode] [Trace] drawImage executed successfully.');
+        } catch (e) {
+            console.error('[SpeakerMode] [Trace] drawImage failed!', e);
+        }
+        
+        // 关键：画完之后，如果此时还没有合成好视频，就让骨架屏显示！
+        // 如果已经有合成好的视频（即它没被删除），那么骨架屏就在底下安静待着。
+        elements.speakerCanvas.style.display = 'block';
+        console.log('[SpeakerMode] [Trace] speakerCanvas display block set.');
+        
         logger.log(`预览已生成`);
     },
 
@@ -108,6 +124,17 @@ export const speakerModeManager = {
         if (!this.pptImage) {
             await this.loadPPTImage();
         }
+
+        // Clean up any existing video and show canvas preview during generation
+        const existingVideo = elements.speakerPreview.querySelector('.speaker-video');
+        if (existingVideo) {
+            existingVideo.remove();
+        }
+        
+        // 关键：在重新合成时，必须唤醒底层的骨架屏！
+        elements.speakerCanvas.style.display = 'block';
+        
+        this.preview(); // Force draw
 
         logger.log('开始生成演讲者模式视频...');
         operationManager.startOperation('合成');
@@ -192,19 +219,9 @@ export const speakerModeManager = {
                 autoTrimStart: true
             });
             
-            const downloadUrl = URL.createObjectURL(speakerVideoBlob);
-            const downloadBtn = document.createElement('button');
-            downloadBtn.textContent = '下载';
-            downloadBtn.className = 'btn btn-success';
-            downloadBtn.style.marginLeft = '10px';
-            downloadBtn.onclick = () => {
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.download = 'speaker-mode-video.mp4';
-                link.click();
-            };
+            state.speakerBlob = speakerVideoBlob;
             
-            elements.generateSpeakerVideo.parentNode.insertBefore(downloadBtn, elements.generateSpeakerVideo.nextSibling);
+            const downloadUrl = URL.createObjectURL(speakerVideoBlob);
             
             const existingVideo = elements.speakerPreview.querySelector('.speaker-video');
             if (existingVideo) {
@@ -215,15 +232,26 @@ export const speakerModeManager = {
             speakerVideo.src = downloadUrl;
             speakerVideo.controls = true;
             speakerVideo.className = 'speaker-video';
-            speakerVideo.style.cssText = 'width: 100%; max-width: 600px; margin-top: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);';
             
-            elements.speakerCanvas.dataset.active = 'false';
+            speakerVideo.oncanplay = () => {
+                console.log('[SpeakerMode] [Trace] speakerVideo is ready to play. Hiding canvas to prevent visual duplication under the transparent video.');
+                elements.speakerCanvas.style.display = 'none';
+            };
+            
+            speakerVideo.onplay = () => {
+                 elements.speakerCanvas.style.display = 'none';
+            }
+            
             elements.speakerPreview.appendChild(speakerVideo);
-            elements.speakerPreview.dataset.active = 'true';
-        elements.speakerCanvas.dataset.active = 'false';
+        // Legacy flag clear
+        // elements.speakerCanvas.dataset.active = 'false';
             
             logger.log('演讲者模式视频生成完成！已在页面显示');
             // uiUtils.updateStatusMessage('合成成功', 'success');
+            
+            // Persist the new speaker video blob
+            persistState();
+            
             operationManager.endOperation('合成');
             uiStateMachine.transitionTo(STATES.SYNTHESIZED);
             
@@ -288,10 +316,8 @@ export const speakerModeManager = {
         
         uiStateMachine.transitionTo(STATES.RECORDED);
         
-        // JS controlled disabled logic removed
-        
-        elements.speakerCanvas.dataset.active = 'true';
-        if (elements.speakerPreview.dataset.active === 'true') {
+        // 移除旧控制逻辑
+        if (uiStateMachine.currentState === STATES.RECORDED || uiStateMachine.currentState === STATES.CONVERTED || uiStateMachine.currentState === STATES.SYNTHESIZING || uiStateMachine.currentState === STATES.SYNTHESIZED) {
             setTimeout(() => {
                 speakerModeManager.preview();
             }, 100);

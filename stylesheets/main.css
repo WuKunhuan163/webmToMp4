@@ -124,6 +124,12 @@
             margin: 15px 0;
         }
 
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         .stat-item {
             background: #f8f9fa;
             padding: 15px;
@@ -259,14 +265,30 @@
 
         .speaker-preview {
             margin-top: 20px;
+            position: relative; /* Add position relative to stack canvas and video */
         }
 
         .speaker-preview canvas {
             width: 100%;
             max-width: 100%;
             height: auto;
+            aspect-ratio: 16 / 9;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative; /* Remove absolute overlaying */
+            z-index: 1;
+        }
+
+        .speaker-video {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+            margin-top: 20px; /* Space it out if both are visible */
         }
 
         .speaker-buttons {

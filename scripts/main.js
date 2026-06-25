@@ -31,10 +31,22 @@ class App {
         
         // IndexedDB state is restored here AFTER app is initialized (converter ready)
         const hasRestored = await restoreState();
+        console.log('[main] hasRestored:', hasRestored);
+        console.log('[main] state.speakerBlob exists?', !!state.speakerBlob);
+        console.log('[main] state.mp4Blob exists?', !!state.mp4Blob);
+        
         if (hasRestored) {
             logger.log(`已从当前 Session(${sid}) 的缓存中恢复上一次的视频`);
             
+            // Wait for video data to load before trying to draw the preview
+            elements.video.onloadeddata = () => {
+                console.log('[main] [Trace] elements.video.onloadeddata fired! Generating preview thumb...');
+                speakerModeManager.preview();
+            };
+            
             elements.video.src = URL.createObjectURL(state.webmBlob);
+            console.log('[main] Set elements.video.src to webmBlob');
+            
             uiUtils.updateVideoFormatIndicator('WEBM');
             
             // Restore stats info
@@ -47,6 +59,7 @@ class App {
             
             if (state.mp4Blob) {
                 elements.video.src = URL.createObjectURL(state.mp4Blob);
+                console.log('[main] Re-set elements.video.src to mp4Blob');
                 uiUtils.updateVideoFormatIndicator('MP4');
                 elements.mp4Size.textContent = uiUtils.formatFileSize(state.mp4Blob.size);
                 
@@ -56,11 +69,45 @@ class App {
                 if (state.compressionRatioStr) {
                     elements.compressionRatio.textContent = state.compressionRatioStr;
                 }
+            }
                 
+            // Restore speaker blob if it exists
+            if (state.speakerBlob) {
+                console.log('[main] [Trace] Restoring speakerVideo element...');
+                const downloadUrl = URL.createObjectURL(state.speakerBlob);
+                const speakerVideo = document.createElement('video');
+                speakerVideo.src = downloadUrl;
+                speakerVideo.controls = true;
+                speakerVideo.className = 'speaker-video';
+                
+                // Wait for the video to be ready before removing the canvas from view
+                speakerVideo.oncanplay = () => {
+                    console.log('[main] [Trace] speakerVideo is ready to play. Hiding canvas to prevent duplication.');
+                    elements.speakerCanvas.style.display = 'none';
+                };
+                
+                // If the user clicks play without waiting for canplay, hide the canvas.
+                speakerVideo.onplay = () => {
+                     elements.speakerCanvas.style.display = 'none';
+                };
+                
+                elements.speakerPreview.appendChild(speakerVideo);
+                console.log('[main] [Trace] Appended speakerVideo to elements.speakerPreview');
+            }
+            
+            // Determine final state
+            if (state.speakerBlob) {
+                console.log('[main] Transitioning to SYNTHESIZED state');
+                uiStateMachine.transitionTo(STATES.SYNTHESIZED);
+            } else if (state.mp4Blob) {
+                console.log('[main] Transitioning to CONVERTED state');
                 uiStateMachine.transitionTo(STATES.CONVERTED);
             } else {
+                console.log('[main] Transitioning to RECORDED state');
                 uiStateMachine.transitionTo(STATES.RECORDED);
             }
+            
+            console.log('[main] Restore state complete. Current DOM state CSS:', document.body.getAttribute('data-state'));
         }
     }
     initAgentRemoteControl() {
@@ -156,16 +203,28 @@ class App {
             logger.log(`MP4 文件下载开始: ${filename}`);
         }
     }
+    
+    downloadSpeaker() {
+        if (state.speakerBlob) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+            const hash = Math.random().toString(36).substring(2, 8);
+            const filename = `speaker_${timestamp}_${hash}.mp4`;
+            uiUtils.downloadFile(state.speakerBlob, filename);
+            logger.log(`合成视频下载开始: ${filename}`);
+        }
+    }
 
     refreshPreviewOnChange() {
         const existingVideo = elements.speakerPreview.querySelector('.speaker-video');
         if (existingVideo) {
             existingVideo.remove();
             logger.log('检测到设置变化，已移除合成视频');
+            
+            // 既然视频移除了，我们要确保底层的 Canvas 骨架露出来！
+            elements.speakerCanvas.style.display = 'block';
         }
         
-        elements.speakerCanvas.dataset.active = 'true';
-        if (elements.speakerPreview.dataset.active === 'true') {
+        if (uiStateMachine.currentState === STATES.RECORDED || uiStateMachine.currentState === STATES.CONVERTED || uiStateMachine.currentState === STATES.SYNTHESIZING || uiStateMachine.currentState === STATES.SYNTHESIZED) {
             speakerModeManager.preview();
             logger.log('预览图已刷新');
         }
@@ -201,6 +260,9 @@ class App {
                     break;
                 case 'cancel-speaker':
                     speakerModeManager.cancel();
+                    break;
+                case 'download-speaker':
+                    this.downloadSpeaker();
                     break;
             }
         });

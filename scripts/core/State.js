@@ -6,6 +6,7 @@ export const state = {
     stream: null,
     webmBlob: null,
     mp4Blob: null,
+    speakerBlob: null,
     isRecording: false,
     recordedChunks: [],
     recordingTimer: null,
@@ -52,6 +53,7 @@ function getDB() {
 }
 
 export async function persistState() {
+    console.trace('[State] persistState called');
     if (!state.webmBlob) return;
     
     const sid = sessionManager.getSid();
@@ -66,6 +68,7 @@ export async function persistState() {
         const data = {
             webm: state.webmBlob,
             mp4: state.mp4Blob,
+            speaker: state.speakerBlob,
             videoDuration: state.videoDuration,
             conversionTimeFormatted: state.conversionTimeFormatted,
             compressionRatioStr: state.compressionRatioStr
@@ -106,6 +109,7 @@ export async function restoreState() {
             console.log('[State] Restored video blobs from IndexedDB for sid:', sid);
             state.webmBlob = data.webm;
             if (data.mp4) state.mp4Blob = data.mp4;
+            if (data.speaker) state.speakerBlob = data.speaker;
             if (data.videoDuration) state.videoDuration = data.videoDuration;
             if (data.conversionTimeFormatted) state.conversionTimeFormatted = data.conversionTimeFormatted;
             if (data.compressionRatioStr) state.compressionRatioStr = data.compressionRatioStr;

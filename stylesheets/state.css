@@ -10,7 +10,8 @@
 #downloadBtn,
 #closeCameraBtn,
 #cancelConvertBtn,
-#cancelSpeakerBtn {
+#cancelSpeakerBtn,
+#downloadSpeakerBtn {
     display: none !important;
 }
 
@@ -112,14 +113,18 @@ body[data-camera="off"] #closeCameraBtn {
     display: block !important;
 }
 
+[data-state="SYNTHESIZED"] #downloadSpeakerBtn {
+    display: block !important;
+}
+
 [data-state="INITIAL"] #speakerPreview,
 [data-state="CAMERA_ON"] #speakerPreview,
-[data-state="RECORDING"] #speakerPreview,
-[data-state="RECORDED"] #speakerPreview,
-[data-state="CONVERTING"] #speakerPreview,
-[data-state="CONVERTED"] #speakerPreview {
+[data-state="RECORDING"] #speakerPreview {
     display: none;
 }
+[data-state="RECORDED"] #speakerPreview,
+[data-state="CONVERTING"] #speakerPreview,
+[data-state="CONVERTED"] #speakerPreview,
 [data-state="SYNTHESIZING"] #speakerPreview,
 [data-state="SYNTHESIZED"] #speakerPreview {
     display: block;
@@ -173,7 +178,15 @@ body[data-camera="off"] #closeCameraBtn {
 }
 
 /* Speaker Preview / Canvas toggle */
+[data-state="RECORDED"] #speakerPreview,
+[data-state="CONVERTING"] #speakerPreview,
+[data-state="CONVERTED"] #speakerPreview,
 [data-state="SYNTHESIZING"] #speakerPreview,
 [data-state="SYNTHESIZED"] #speakerPreview {
     display: block !important;
+}
+
+#speakerCanvas {
+    /* Always display it when needed, driven by data-state */
+    display: block;
 }
