@@ -19,11 +19,19 @@ export const recorderManager = {
         // 每次开始录制前，清理可能残留的数据与视图状态
         state.webmBlob = null;
         state.mp4Blob = null;
+        state.speakerBlob = null;
+        
+        // Reset stats panel texts
+        elements.webmSize.textContent = '-';
+        elements.mp4Size.textContent = '-';
+        elements.convertTime.textContent = '-';
+        elements.compressionRatio.textContent = '-';
         // DOM display handling has been fully migrated to state.css
         const existingVideo = elements.speakerPreview.querySelector('.speaker-video');
         if (existingVideo) existingVideo.remove();
-        elements.speakerCanvas.dataset.active = 'true';
-        elements.speakerPreview.dataset.active = 'false';
+        elements.speakerCanvas.style.display = 'none'; // Will be drawn and shown when preview() is called later
+        // elements.speakerCanvas.dataset.active = 'true';
+        // elements.speakerPreview.dataset.active = 'false';
 
         state.recordedChunks = [];
         state.isRecording = true;

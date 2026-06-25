@@ -97,6 +97,11 @@ class App {
         }
     }
     initAgentRemoteControl() {
+        // Skip SSE initialization if we are running in production/Vercel (where no local Vite server exists)
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            return;
+        }
+        
         try {
             const eventSource = new EventSource('/agent-sse');
             eventSource.onmessage = async (event) => {
